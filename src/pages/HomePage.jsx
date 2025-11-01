@@ -83,29 +83,113 @@ const HomePage = () => {
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ duration: 1 }}
-        className="relative py-20 px-4 text-center overflow-hidden"
+        className="relative py-20 px-4 overflow-hidden"
       >
         <div className="absolute inset-0 bg-pink-500 opacity-5"></div>
-        <div className="relative max-w-6xl mx-auto">
-          <motion.h1 
-            initial={{ y: 30, opacity: 0 }}
-            animate={{ y: 0, opacity: 1 }}
-            transition={{ delay: 0.2, duration: 0.8 }}
-            className="text-5xl md:text-7xl font-bold text-gray-800 mb-6"
-          >
-            Predict Your Health,
-            <span className="text-pink-600"> Prevent Disease</span>
-          </motion.h1>
-          
-          <motion.p 
-            initial={{ y: 30, opacity: 0 }}
-            animate={{ y: 0, opacity: 1 }}
-            transition={{ delay: 0.4, duration: 0.8 }}
-            className="text-xl md:text-2xl text-gray-600 mb-10 max-w-4xl mx-auto leading-relaxed"
-          >
-            Revolutionary AI-powered healthcare platform that analyzes your medical reports to predict potential diseases before they become critical. Take control of your health journey today.
-          </motion.p>
-          
+        <div className="relative max-w-7xl mx-auto">
+          <div className="grid lg:grid-cols-2 gap-12 items-center mb-12">
+            {/* Left Text Content */}
+            <motion.div 
+              initial={{ x: -50, opacity: 0 }}
+              animate={{ x: 0, opacity: 1 }}
+              transition={{ delay: 0.2, duration: 0.8 }}
+              className="text-left"
+            >
+              <motion.h1 
+                initial={{ y: 30, opacity: 0 }}
+                animate={{ y: 0, opacity: 1 }}
+                transition={{ delay: 0.3, duration: 0.8 }}
+                className="text-4xl lg:text-6xl font-bold text-gray-800 mb-6 leading-tight"
+              >
+                Predict Your Health,
+                <span className="text-pink-600"> Prevent Disease</span>
+              </motion.h1>
+              
+              <motion.p 
+                initial={{ y: 30, opacity: 0 }}
+                animate={{ y: 0, opacity: 1 }}
+                transition={{ delay: 0.4, duration: 0.8 }}
+                className="text-lg lg:text-xl text-gray-600 mb-8 leading-relaxed"
+              >
+                Revolutionary AI-powered healthcare platform that analyzes your medical reports to predict potential diseases before they become critical. Take control of your health journey today.
+              </motion.p>
+
+              {/* Key Features List */}
+              <motion.div
+                initial={{ y: 30, opacity: 0 }}
+                animate={{ y: 0, opacity: 1 }}
+                transition={{ delay: 0.5, duration: 0.8 }}
+                className="space-y-3 mb-8"
+              >
+                <div className="flex items-center text-gray-700">
+                  <FaCheckCircle className="text-green-500 mr-3" />
+                  <span className="font-medium">AI-powered disease prediction with 95% accuracy</span>
+                </div>
+                <div className="flex items-center text-gray-700">
+                  <FaCheckCircle className="text-green-500 mr-3" />
+                  <span className="font-medium">HIPAA compliant and secure data handling</span>
+                </div>
+                <div className="flex items-center text-gray-700">
+                  <FaCheckCircle className="text-green-500 mr-3" />
+                  <span className="font-medium">Expert medical professionals available 24/7</span>
+                </div>
+              </motion.div>
+            </motion.div>
+
+            {/* Right Health Image */}
+            <motion.div 
+              initial={{ x: 50, opacity: 0 }}
+              animate={{ x: 0, opacity: 1 }}
+              transition={{ delay: 0.4, duration: 0.8 }}
+              className="relative flex justify-center"
+            >
+              <div className="relative">
+                {/* Background Decorations */}
+                <div className="absolute -top-8 -left-8 w-24 h-24 bg-pink-200 rounded-full opacity-60 animate-pulse"></div>
+                <div className="absolute -bottom-6 -right-6 w-20 h-20 bg-green-200 rounded-full opacity-60 animate-pulse delay-300"></div>
+                <div className="absolute top-1/2 -left-12 w-16 h-16 bg-blue-200 rounded-full opacity-60 animate-pulse delay-500"></div>
+                
+                {/* Main Health Image */}
+                <div className="relative bg-white rounded-3xl shadow-2xl p-8 max-w-md">
+                  <img
+                    src="https://images.unsplash.com/photo-1559757148-5c350d0d3c56?w=400&h=500&fit=crop&crop=center"
+                    alt="Healthcare Professional with Digital Health Technology"
+                    className="w-full h-80 object-cover rounded-2xl"
+                  />
+                  
+                  {/* Floating Health Stats */}
+                  <motion.div 
+                    className="absolute -top-4 -right-4 bg-pink-500 text-white p-3 rounded-xl shadow-lg"
+                    animate={{ y: [0, -10, 0] }}
+                    transition={{ repeat: Infinity, duration: 3 }}
+                  >
+                    <FaHeartbeat className="text-xl mb-1" />
+                    <p className="text-xs font-bold">95% Accuracy</p>
+                  </motion.div>
+
+                  <motion.div 
+                    className="absolute -bottom-4 -left-4 bg-green-500 text-white p-3 rounded-xl shadow-lg"
+                    animate={{ y: [0, -8, 0] }}
+                    transition={{ repeat: Infinity, duration: 2.5, delay: 0.5 }}
+                  >
+                    <FaShieldAlt className="text-xl mb-1" />
+                    <p className="text-xs font-bold">HIPAA Secure</p>
+                  </motion.div>
+
+                  <motion.div 
+                    className="absolute top-1/2 -right-6 bg-blue-500 text-white p-3 rounded-xl shadow-lg"
+                    animate={{ x: [0, 8, 0] }}
+                    transition={{ repeat: Infinity, duration: 2.8, delay: 1 }}
+                  >
+                    <FaBrain className="text-xl mb-1" />
+                    <p className="text-xs font-bold">AI Powered</p>
+                  </motion.div>
+                </div>
+              </div>
+            </motion.div>
+          </div>
+
+          {/* Call to Action Buttons */}
           <motion.div
             initial={{ y: 30, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
@@ -116,7 +200,7 @@ const HomePage = () => {
               <motion.button
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
-                className="bg-pink-500 hover:bg-pink-600 text-white px-8 py-4 rounded-full text-lg font-semibold transition-all duration-300 flex items-center cursor-pointer"
+                className="bg-pink-500 hover:bg-pink-600 text-white px-8 py-4 rounded-full text-lg font-semibold hover:shadow-2xl transition-all duration-300 flex items-center"
               >
                 Get Started as Patient
                 <FaArrowRight className="ml-2" />
@@ -127,10 +211,10 @@ const HomePage = () => {
               <motion.button
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
-                className="border-2 border-green-500 hover:border-green-600 text-green-500 px-8 py-4 rounded-full text-lg font-semibold transition-all duration-300 flex items-center cursor-pointer"
+                className="border-2 border-green-500 hover:border-green-600 text-white px-8 py-4 rounded-full text-lg font-semibold hover:shadow-lg transition-all duration-300 flex items-center"
               >
-                Join as Doctor
-                <FaUserMd className="ml-2" />
+                <p className='text-green-500'>Join as Doctor</p>
+                <FaUserMd className="ml-2 text-green-500" />
               </motion.button>
             </Link>
           </motion.div>
@@ -159,7 +243,7 @@ const HomePage = () => {
                 key={index}
                 initial={{ opacity: 0, y: 30 }}
                 whileInView={{ opacity: 1, y: 0 }}
-                transition={{ delay: index * 0.1, duration: 0.6 }}
+                transition={{ delay: index * 0.1, duration: 0.1 }}
                 viewport={{ once: true }}
                 whileHover={{ scale: 1.05, rotateY: 5 }}
                 className="bg-white rounded-2xl p-6 shadow-lg hover:shadow-2xl transition-all duration-300 border border-gray-100"
@@ -250,7 +334,7 @@ const HomePage = () => {
         className="py-20 px-4"
       >
         <div className="max-w-6xl mx-auto">
-          <div className="bg-blue-600 rounded-3xl p-12 text-white text-center">
+          <div className="rounded-3xl p-12 text-gray-700 text-center">
             <h2 className="text-4xl md:text-5xl font-bold mb-12">Trusted by Healthcare Professionals</h2>
             <div className="grid md:grid-cols-4 gap-8">
               {stats.map((stat, index) => (

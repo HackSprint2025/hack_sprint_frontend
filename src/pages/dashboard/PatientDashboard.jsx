@@ -20,6 +20,8 @@ import {
 
 const PatientDashboard = () => {
   const [selectedFile, setSelectedFile] = useState(null);
+  const [showConsentModal, setShowConsentModal] = useState(false);
+  const [consentAgreed, setConsentAgreed] = useState(false);
   const [uploadedReports, setUploadedReports] = useState([
     {
       id: 1,
@@ -55,6 +57,12 @@ const PatientDashboard = () => {
 
   const handleUpload = () => {
     if (selectedFile) {
+      setShowConsentModal(true);
+    }
+  };
+
+  const handleConsentAccept = () => {
+    if (selectedFile && consentAgreed) {
       const newReport = {
         id: uploadedReports.length + 1,
         name: selectedFile.name,
@@ -64,9 +72,16 @@ const PatientDashboard = () => {
       };
       setUploadedReports([newReport, ...uploadedReports]);
       setSelectedFile(null);
+      setShowConsentModal(false);
+      setConsentAgreed(false);
       // Reset file input
       document.getElementById('file-upload').value = '';
     }
+  };
+
+  const handleConsentDecline = () => {
+    setShowConsentModal(false);
+    setConsentAgreed(false);
   };
 
   const handleDeleteReport = (id) => {
@@ -111,7 +126,7 @@ const PatientDashboard = () => {
   };
 
   return (
-    <div className="min-h-screen bg-linear-to-br from-blue-50 via-white to-green-50 py-8 px-4">
+    <div className="min-h-screen bg-gray-50 py-8 px-4">
       <div className="max-w-7xl mx-auto">
         {/* Header */}
         <motion.div 
@@ -364,6 +379,88 @@ const PatientDashboard = () => {
           </motion.div>
         </div>
       </div>
+
+      {/* Consent Modal */}
+      {showConsentModal && (
+        <div className="fixed inset-0 bg-black/30 bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <motion.div 
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ duration: 0.3 }}
+            className="bg-white rounded-2xl p-8 max-w-md w-full shadow-2xl"
+          >
+            <div className="text-center mb-6">
+              <div className="w-16 h-16 bg-pink-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                <FaInfoCircle className="text-pink-600 text-2xl" />
+              </div>
+              <h2 className="text-2xl font-bold text-gray-800 mb-2">Data Usage Consent</h2>
+              <p className="text-gray-600">Before we analyze your medical report, please review our data usage policy.</p>
+            </div>
+
+            <div className="space-y-4 mb-6">
+              <div className="bg-blue-50 p-4 rounded-lg">
+                <h3 className="font-semibold text-blue-800 mb-2">How We Use Your Data:</h3>
+                <ul className="text-sm text-blue-700 space-y-1">
+                  <li>• AI analysis for disease prediction</li>
+                  <li>• Improving our prediction algorithms</li>
+                  <li>• Medical research (anonymized)</li>
+                  <li>• Statistical analysis for better healthcare</li>
+                </ul>
+              </div>
+
+              <div className="bg-green-50 p-4 rounded-lg">
+                <h3 className="font-semibold text-green-800 mb-2">Your Privacy is Protected:</h3>
+                <ul className="text-sm text-green-700 space-y-1">
+                  <li>• All data is encrypted and secure</li>
+                  <li>• Personal information is anonymized</li>
+                  <li>• HIPAA compliant handling</li>
+                  <li>• You can withdraw consent anytime</li>
+                </ul>
+              </div>
+            </div>
+
+            <div className="mb-6">
+              <label className="flex items-start space-x-3 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={consentAgreed}
+                  onChange={(e) => setConsentAgreed(e.target.checked)}
+                  className="mt-1 w-4 h-4 text-pink-600 border-gray-300 rounded focus:ring-pink-500"
+                />
+                <span className="text-sm text-gray-700 leading-relaxed">
+                  I consent to the use of my medical data for AI analysis, research purposes, and algorithm improvement. 
+                  I understand that my data will be anonymized and handled according to HIPAA regulations.
+                </span>
+              </label>
+            </div>
+
+            <div className="flex space-x-3">
+              <motion.button
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+                onClick={handleConsentDecline}
+                className="flex-1 px-4 py-3 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors duration-300"
+              >
+                Decline
+              </motion.button>
+              
+              <motion.button
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+                onClick={handleConsentAccept}
+                disabled={!consentAgreed}
+                className={`flex-1 px-4 py-3 rounded-lg transition-all duration-300 ${
+                  consentAgreed
+                    ? 'bg-pink-600 text-white hover:bg-pink-700 hover:shadow-lg'
+                    : 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                }`}
+              >
+                Accept & Upload
+              </motion.button>
+            </div>
+          </motion.div>
+        </div>
+      )}
     </div>
   );
 };

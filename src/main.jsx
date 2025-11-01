@@ -10,6 +10,8 @@ import SignupPage from './pages/auth/SignupPage.jsx'
 import PatientDashboard from './pages/dashboard/PatientDashboard.jsx'
 import DoctorDashboard from './pages/dashboard/DoctorDashboard.jsx'
 import ProfileHolder from './components/ProfileHolder.jsx'
+import ContactPage from './pages/ContactPage.jsx'
+import ScheduleConsultationPage from './pages/ScheduleConsultationPage.jsx'
 
 const router = createBrowserRouter([
   {
@@ -43,6 +45,14 @@ const router = createBrowserRouter([
       {
         path: '/profile',
         element: <ProfileHolder />,
+      },
+      {
+        path: '/contact',
+        element: <ContactPage />,
+      },
+      {
+        path: '/schedule-consultation',
+        element: <ScheduleConsultationPage />,
       }
     ]
   },

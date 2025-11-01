@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
-import { FaHeart, FaBars, FaTimes, FaUserMd, FaUser, FaHome, FaInfoCircle, FaPlusCircle } from 'react-icons/fa';
+import { FaHeart, FaBars, FaTimes, FaUserMd, FaUser, FaHome, FaInfoCircle, FaPlusCircle, FaUserAlt, FaEnvelope } from 'react-icons/fa';
 import { Link, useLocation } from 'react-router-dom';
 
 function Navbar() {
@@ -10,7 +10,8 @@ function Navbar() {
   const navItems = [
     { name: 'Home', path: '/', icon: FaHome },
     { name: 'About', path: '/about', icon: FaInfoCircle },
-    { name: 'Profile', path: '/profile', icon: FaInfoCircle },
+    { name: 'Contact', path: '/contact', icon: FaEnvelope },
+    { name: 'Profile', path: '/profile', icon: FaUserAlt },
   ];
 
   const isActive = (path) => location.pathname === path;
@@ -22,7 +23,7 @@ function Navbar() {
       transition={{ duration: 0.6 }}
       className="font-lato bg-white shadow-lg border-b border-gray-100 sticky top-0 z-40"
     >
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 md:py-1">
         <div className="flex justify-between items-center h-16">
           {/* Logo */}
           <Link to="/" className="flex items-center">
@@ -32,7 +33,7 @@ function Navbar() {
               className="flex items-center"
             >
               <div className="flex items-center justify-center w-10 h-10  rounded-full mr-1">
-                <FaPlusCircle className="text-pink-800 text-lg" size={26} />
+                <FaPlusCircle className="text-pink-800 text-lg" size={28} />
               </div>
               <h1 className="text-2xl font-bold text-gray-800">
                 Health<span className="text-pink-800">Predict</span>
@@ -42,7 +43,7 @@ function Navbar() {
 
           {/* Desktop Navigation */}
           <div className="hidden md:block">
-            <div className="flex items-center space-x-8">
+            <div className="flex items-center space-x-2">
               {navItems.map((item) => {
                 const IconComponent = item.icon;
                 return (
@@ -55,8 +56,8 @@ function Navbar() {
                         : 'text-gray-600 hover:text-pink-400'
                     }`}
                   >
-                    <IconComponent className="mr-2" size={20} />
-                    <p className='text-lg'>{item.name}</p>
+                    <IconComponent className="mr-2" size={18} />
+                    <p className='text-md'>{item.name}</p>
                   </Link>
                 );
               })}

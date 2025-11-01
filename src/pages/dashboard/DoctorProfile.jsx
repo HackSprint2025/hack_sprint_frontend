@@ -103,7 +103,7 @@ const DoctorProfile = () => {
   ];
 
   return (
-    <div className="min-h-screen bg-linear-to-br from-blue-50 via-white to-green-50 py-8 px-4">
+    <div className="min-h-screen bg-gray-50 py-8 px-4">
       <div className="max-w-6xl mx-auto">
         {/* Header */}
         <motion.div 
@@ -115,7 +115,7 @@ const DoctorProfile = () => {
           <div className="flex items-center justify-between">
             <div className="flex items-center">
               <div className="relative">
-                <div className="w-24 h-24 bg-linear-to-r from-blue-600 to-teal-600 rounded-full flex items-center justify-center text-white text-2xl font-bold mr-6">
+                <div className="w-24 h-24 bg-green-600 rounded-full flex items-center justify-center text-white text-2xl font-bold mr-6">
                   <FaUserMd />
                 </div>
                 <button className="absolute bottom-0 right-2 bg-white rounded-full p-2 shadow-lg border border-gray-200 hover:bg-gray-50">
@@ -150,7 +150,7 @@ const DoctorProfile = () => {
               className={`px-6 py-3 rounded-lg font-semibold flex items-center transition-all duration-300 ${
                 isEditing 
                 ? 'bg-gray-200 text-gray-700 hover:bg-gray-300' 
-                : 'bg-linear-to-r from-blue-600 to-teal-600 text-white hover:shadow-lg'
+                : 'bg-green-600 text-white hover:shadow-lg'
               }`}
             >
               {isEditing ? (
