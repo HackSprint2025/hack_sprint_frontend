@@ -1,1 +1,258 @@
 @import "tailwindcss";
+
+/* Healthcare Color Palette & Global Styles */
+:root {
+  --primary-blue: #2563eb;
+  --primary-teal: #0d9488;
+  --secondary-blue: #1d4ed8;
+  --accent-green: #10b981;
+  --warning-yellow: #f59e0b;
+  --error-red: #ef4444;
+  --success-green: #22c55e;
+  --neutral-gray: #6b7280;
+  --light-gray: #f8fafc;
+  --white: #ffffff;
+  --dark-gray: #1f2937;
+}
+
+/* Custom Healthcare Gradients */
+.bg-healthcare-primary {
+  background: linear-gradient(135deg, var(--primary-blue), var(--primary-teal));
+}
+
+.bg-healthcare-light {
+  background: linear-gradient(135deg, #eff6ff, #f0fdfa);
+}
+
+.bg-healthcare-accent {
+  background: linear-gradient(135deg, var(--accent-green), var(--primary-teal));
+}
+
+/* Smooth Scrolling */
+html {
+  scroll-behavior: smooth;
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: #f1f5f9;
+}
+
+::-webkit-scrollbar-thumb {
+  background: linear-gradient(135deg, var(--primary-blue), var(--primary-teal));
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(135deg, var(--secondary-blue), var(--primary-teal));
+}
+
+/* Focus States for Accessibility */
+button:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible {
+  outline: 2px solid var(--primary-blue);
+  outline-offset: 2px;
+}
+
+/* Healthcare Button Animations */
+.healthcare-button {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  transform: translateZ(0);
+}
+
+.healthcare-button:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 10px 25px rgba(37, 99, 235, 0.3);
+}
+
+.healthcare-button:active {
+  transform: translateY(0px);
+}
+
+/* Healthcare Card Hover Effects */
+.healthcare-card {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  transform: translateZ(0);
+}
+
+.healthcare-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+}
+
+/* Medical Icon Animations */
+@keyframes heartbeat {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.05); }
+}
+
+.heartbeat-animation {
+  animation: heartbeat 2s ease-in-out infinite;
+}
+
+/* Loading Spinner for Medical Reports */
+@keyframes spin-medical {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.spin-medical {
+  animation: spin-medical 1s linear infinite;
+}
+
+/* Risk Level Indicators */
+.risk-high {
+  background: linear-gradient(135deg, #fee2e2, #fecaca);
+  border-color: #f87171;
+  color: #dc2626;
+}
+
+.risk-medium {
+  background: linear-gradient(135deg, #fef3c7, #fed7aa);
+  border-color: #fb923c;
+  color: #ea580c;
+}
+
+.risk-low {
+  background: linear-gradient(135deg, #dcfce7, #bbf7d0);
+  border-color: #4ade80;
+  color: #16a34a;
+}
+
+/* Upload Drag and Drop Styling */
+.upload-area {
+  transition: all 0.3s ease;
+  border: 2px dashed #cbd5e1;
+}
+
+.upload-area:hover,
+.upload-area.drag-over {
+  border-color: var(--primary-blue);
+  background: linear-gradient(135deg, #eff6ff, #f0f9ff);
+}
+
+/* Healthcare Form Styling */
+.healthcare-input {
+  transition: all 0.3s ease;
+  border: 2px solid #e2e8f0;
+}
+
+.healthcare-input:focus {
+  border-color: var(--primary-blue);
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+}
+
+/* Medical Report Status Badges */
+.status-analyzing {
+  background: linear-gradient(135deg, #dbeafe, #bfdbfe);
+  color: #1d4ed8;
+  animation: pulse 2s infinite;
+}
+
+.status-complete {
+  background: linear-gradient(135deg, #dcfce7, #bbf7d0);
+  color: #16a34a;
+}
+
+.status-error {
+  background: linear-gradient(135deg, #fee2e2, #fecaca);
+  color: #dc2626;
+}
+
+/* Healthcare Typography */
+h1, h2, h3, h4, h5, h6 {
+  font-weight: 600;
+  line-height: 1.2;
+  color: var(--dark-gray);
+}
+
+.healthcare-text {
+  color: var(--neutral-gray);
+  line-height: 1.6;
+}
+
+/* Modal and Overlay Animations */
+.modal-backdrop {
+  backdrop-filter: blur(4px);
+  background: rgba(0, 0, 0, 0.3);
+}
+
+.modal-content {
+  animation: modalSlideIn 0.3s ease-out;
+}
+
+@keyframes modalSlideIn {
+  from {
+    opacity: 0;
+    transform: translateY(-20px) scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+/* Healthcare Dashboard Grid */
+.dashboard-grid {
+  display: grid;
+  gap: 1.5rem;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+}
+
+/* Medical Chart Colors */
+.chart-cardiology { color: #ef4444; }
+.chart-neurology { color: #8b5cf6; }
+.chart-ophthalmology { color: #06b6d4; }
+.chart-pulmonology { color: #10b981; }
+
+/* Responsive Healthcare Layout */
+@media (max-width: 768px) {
+  .healthcare-card {
+    margin: 0.5rem 0;
+  }
+  
+  .dashboard-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Print Styles for Medical Reports */
+@media print {
+  .no-print {
+    display: none !important;
+  }
+  
+  .healthcare-card {
+    box-shadow: none;
+    border: 1px solid #e5e7eb;
+  }
+}
+
+/* Healthcare Accessibility Improvements */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* High Contrast Mode Support */
+@media (prefers-contrast: high) {
+  .healthcare-card {
+    border: 2px solid currentColor;
+  }
+  
+  button {
+    border: 2px solid currentColor;
+  }
+}
