@@ -193,13 +193,13 @@ const Chatbot = ({ isOpen, onClose, className = '' }) => {
       className={`fixed ${isMobile ? 'inset-0' : 'bottom-4 right-4 w-96 h-128'} bg-white ${isMobile ? 'rounded-t-3xl' : 'rounded-3xl'} shadow-2xl z-50 flex flex-col border border-gray-200 ${className}`}
     >
       {/* Header */}
-      <div className="bg-linear-to-r from-blue-600 to-blue-700 text-white p-4 rounded-t-3xl flex items-center justify-between">
+      <div className="bg-linear-to-r from-pink-600 to-pink-700 text-white p-4 rounded-t-3xl flex items-center justify-between">
         <div className="flex items-center space-x-3">
-          <div className="w-10 h-10 bg-white bg-opacity-20 rounded-full flex items-center justify-center">
+          <div className="w-10 h-10 bg-white text-gray-600 bg-opacity-20 rounded-full flex items-center justify-center">
             <FaRobot className="text-xl" />
           </div>
           <div>
-            <h3 className="font-semibold">Healthcare Assistant</h3>
+            <h3 className="font-semibold"><p className='text-white'>Healthcare Assistant</p></h3>
             <p className="text-xs opacity-80">
               {sessionInfo.isActive ? 'Online' : 'Connecting...'}
             </p>
@@ -209,26 +209,8 @@ const Chatbot = ({ isOpen, onClose, className = '' }) => {
         <div className="flex items-center space-x-2">
           {/* Action buttons */}
           <button
-            onClick={clearChat}
-            disabled={messages.length === 0}
-            className="p-2 hover:bg-white hover:bg-opacity-20 rounded-full transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-            title="Clear chat"
-          >
-            <FaTrash className="text-sm" />
-          </button>
-          
-          <button
-            onClick={exportChat}
-            disabled={messages.length === 0}
-            className="p-2 hover:bg-white hover:bg-opacity-20 rounded-full transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-            title="Export chat"
-          >
-            <FaDownload className="text-sm" />
-          </button>
-          
-          <button
             onClick={onClose}
-            className="p-2 hover:bg-white hover:bg-opacity-20 rounded-full transition-colors"
+            className="p-2 hover:scale-110 hover:bg-opacity-20 rounded-full transition-colors cursor-pointer"
             title="Close chat"
           >
             <FaTimes className="text-lg" />
@@ -254,7 +236,7 @@ const Chatbot = ({ isOpen, onClose, className = '' }) => {
               <div
                 className={`max-w-[80%] rounded-2xl px-4 py-2 ${
                   message.type === 'user'
-                    ? 'bg-blue-600 text-white ml-4'
+                    ? 'bg-pink-600 text-white ml-4'
                     : message.type === 'error'
                     ? 'bg-red-100 text-red-800 border border-red-200 mr-4'
                     : 'bg-white text-gray-800 border border-gray-200 mr-4'
@@ -328,7 +310,7 @@ const Chatbot = ({ isOpen, onClose, className = '' }) => {
                 <button
                   key={index}
                   onClick={() => handleSuggestionClick(suggestion)}
-                  className="text-left p-3 bg-white border border-gray-200 rounded-lg hover:border-blue-300 hover:bg-blue-50 transition-all duration-200 text-sm"
+                  className="text-left p-3 bg-white border border-gray-200 rounded-lg hover:border-blue-300 hover:bg-pink-50 transition-all duration-200 text-sm"
                 >
                   {suggestion}
                 </button>
@@ -356,17 +338,17 @@ const Chatbot = ({ isOpen, onClose, className = '' }) => {
 
       {/* Input Area */}
       <div className="border-t border-gray-200 p-4 bg-white rounded-b-3xl">
-        <div className="flex items-end space-x-2">
+        <div className="flex items-center space-x-2">
           <div className="flex-1 relative">
             <textarea
               ref={inputRef}
               value={inputMessage}
               onChange={(e) => setInputMessage(e.target.value)}
-              onKeyPress={handleKeyPress}
+              onKeyDown={handleKeyPress}
               placeholder="Type your health question here..."
               disabled={isLoading || !sessionInfo.isActive}
               rows={1}
-              className="w-full px-4 py-3 border border-gray-300 rounded-2xl resize-none focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:bg-gray-100 disabled:cursor-not-allowed text-sm"
+              className="w-full px-4 py-3 border border-gray-300 rounded-2xl resize-none focus:border-transparent disabled:bg-gray-100 disabled:cursor-not-allowed text-sm"
               style={{
                 minHeight: '48px',
                 maxHeight: '120px'
@@ -376,17 +358,12 @@ const Chatbot = ({ isOpen, onClose, className = '' }) => {
                 e.target.style.height = Math.min(e.target.scrollHeight, 120) + 'px';
               }}
             />
-            
-            {/* Character count */}
-            <div className="absolute bottom-1 right-2 text-xs text-gray-400">
-              {inputMessage.length}/1000
-            </div>
           </div>
           
           <button
             onClick={sendMessage}
             disabled={!inputMessage.trim() || isLoading || !sessionInfo.isActive}
-            className="bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 text-white p-3 rounded-2xl transition-colors disabled:cursor-not-allowed shrink-0"
+            className="bg-pink-600 hover:bg-pink-700 disabled:bg-gray-400 text-white p-3 rounded-2xl transition-colors disabled:cursor-not-allowed shrink-0"
             title="Send message"
           >
             {isLoading ? (
@@ -395,11 +372,6 @@ const Chatbot = ({ isOpen, onClose, className = '' }) => {
               <FaPaperPlane />
             )}
           </button>
-        </div>
-        
-        {/* Input hints */}
-        <div className="text-xs text-gray-500 mt-2 text-center">
-          Press Enter to send • Shift+Enter for new line
         </div>
       </div>
     </motion.div>

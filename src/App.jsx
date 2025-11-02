@@ -9,7 +9,7 @@ function App() {
       <Navbar />
       <Outlet />
       <Footer />
-      {/* <FloatingChatButton /> */}
+      <FloatingChatButton />
     </>
   )
 }

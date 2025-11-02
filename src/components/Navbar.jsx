@@ -14,7 +14,6 @@ function Navbar() {
     { name: 'Home', path: '/', icon: FaHome },
     { name: 'About', path: '/about', icon: FaInfoCircle },
     { name: 'Emergency', path: '/emergency', icon: FaAmbulance },
-    { name: 'Chat Assistant', path: '/chat', icon: FaComments },
     { name: 'Contact', path: '/contact', icon: FaEnvelope },
   ];
 
@@ -44,7 +43,7 @@ function Navbar() {
       transition={{ duration: 0.6 }}
       className="font-lato bg-white shadow-lg border-b border-gray-100 sticky top-0 z-40"
     >
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 md:py-1">
+      <div className="max-w-8xl mx-auto px-4 sm:px-6 lg:px-8 md:py-1">
         <div className="flex justify-between items-center h-16">
           {/* Logo */}
           <Link to="/" className="flex items-center">

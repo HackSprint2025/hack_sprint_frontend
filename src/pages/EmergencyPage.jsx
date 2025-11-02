@@ -121,55 +121,9 @@ const EmergencyPage = () => {
     } catch (error) {
       console.error('Error loading hospitals:', error);
       setHospitalError(error.message);
-      
-      // Load fallback dummy data
-      loadFallbackHospitals();
     } finally {
       setIsLoadingHospitals(false);
     }
-  };
-
-  const loadFallbackHospitals = () => {
-    console.log('Loading fallback hospital data...');
-    // Fallback dummy data in case API fails
-    const fallbackHospitals = [
-      {
-        id: 'fallback-1',
-        name: "City Medical Center",
-        distance: "1.2 km",
-        contactNumber: "+1 (555) 123-4567",
-        emergencyContactNumber: "+1 (555) 911-1234",
-        address: "123 Healthcare Avenue, Medical District, MD 12345",
-        image: "https://images.unsplash.com/photo-1586773860418-d37222d8eee8?w=500&h=300&fit=crop",
-        rating: 4.8,
-        type: "General Hospital",
-        services: ["Emergency Care", "Trauma Center", "ICU", "Surgery", "Cardiology"],
-        emergencyWaitTime: "15-20 mins",
-        availableNow: true,
-        isOpen: true,
-        description: "City Medical Center is a leading healthcare facility providing comprehensive emergency and medical services 24/7.",
-        coordinates: { lat: 40.7128, lng: -74.0060 }
-      },
-      {
-        id: 'fallback-2',
-        name: "St. Mary's Emergency Hospital",
-        distance: "2.8 km",
-        contactNumber: "+1 (555) 987-6543",
-        emergencyContactNumber: "+1 (555) 911-5678",
-        address: "456 Emergency Lane, Healthcare District, MD 54321",
-        image: "https://images.unsplash.com/photo-1551190822-a9333d879b1f?w=500&h=300&fit=crop",
-        rating: 4.6,
-        type: "Emergency Specialty Hospital",
-        services: ["Emergency Care", "Critical Care", "Ambulatory Surgery", "Radiology"],
-        emergencyWaitTime: "10-15 mins",
-        availableNow: true,
-        isOpen: true,
-        description: "St. Mary's Emergency Hospital specializes in urgent and emergency medical care with rapid diagnosis and treatment.",
-        coordinates: { lat: 40.7589, lng: -73.9851 }
-      }
-    ];
-    
-    setHospitals(fallbackHospitals);
   };
 
   const calculateDistance = (lat1, lon1, lat2, lon2) => {

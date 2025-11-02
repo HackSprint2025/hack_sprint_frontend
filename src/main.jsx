@@ -8,7 +8,6 @@ import ProtectedRoute from './components/ProtectedRoute.jsx'
 import HomePage from './pages/HomePage.jsx'
 import AboutPage from './pages/AboutPage.jsx'
 import EmergencyPage from './pages/EmergencyPage.jsx'
-import ChatPage from './pages/ChatPage.jsx'
 import LoginPage from './pages/auth/LoginPage.jsx'
 import SignupPage from './pages/auth/SignupPage.jsx'
 import PatientDashboard from './pages/dashboard/PatientDashboard.jsx'
@@ -33,10 +32,6 @@ const router = createBrowserRouter([
       {
         path: '/emergency',
         element: <EmergencyPage />,
-      },
-      {
-        path: '/chat',
-        element: <ChatPage />,
       },
       {
         path: '/login',
