@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
 import { FaUser, FaUserMd, FaEnvelope, FaLock, FaEye, FaEyeSlash, FaHeart, FaPhone, FaIdCard, FaSpinner, FaCheckCircle } from 'react-icons/fa';
 import { Link, useNavigate } from 'react-router-dom';
@@ -110,6 +110,12 @@ const SignupPage = () => {
     'Cardiology', 'Neurology', 'Ophthalmology', 'General Medicine', 
     'Dermatology', 'Orthopedics', 'Pediatrics', 'Psychiatry'
   ];
+
+  useEffect(() => {
+    if(localStorage.getItem('user')) {
+      navigate('/patient-dashboard');
+    }
+  }, []);
 
   return (
     <div className="min-h-screen bg-gray-50 flex items-center justify-center py-12 px-4">

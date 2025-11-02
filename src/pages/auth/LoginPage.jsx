@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
 import { FaUser, FaUserMd, FaEnvelope, FaLock, FaEye, FaEyeSlash, FaHeart, FaSpinner } from 'react-icons/fa';
 import { Link, useNavigate } from 'react-router-dom';
@@ -48,6 +48,12 @@ const LoginPage = () => {
       setIsSubmitting(false);
     }
   };
+
+  useEffect(() => {
+      if(localStorage.getItem('user')) {
+        navigate('/patient-dashboard');
+      }
+    }, []);
 
   return (
     <div className="min-h-screen bg-gray-50 flex items-center justify-center py-12 px-4">

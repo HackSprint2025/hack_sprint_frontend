@@ -365,7 +365,7 @@ const PatientReports = () => {
                     </a>
                   )}
 
-                  {report.status === 'analyzed' && !analytics[report.id] && (
+                  {/* {report.status === 'analyzed' && !analytics[report.id] && (
                     <button
                       onClick={() => handleAnalyzeReport(report.id)}
                       disabled={analyzing[report.id]}
@@ -383,7 +383,7 @@ const PatientReports = () => {
                         </>
                       )}
                     </button>
-                  )}
+                  )} */}
 
                   {analytics[report.id] && (
                     <button
@@ -412,7 +412,7 @@ const PatientReports = () => {
       {/* Upload Modal */}
       <AnimatePresence>
         {showUploadModal && (
-          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+          <div className="fixed inset-0 bg-black/30 bg-opacity-50 flex items-center justify-center p-4 z-50">
             <motion.div
               initial={{ opacity: 0, scale: 0.9 }}
               animate={{ opacity: 1, scale: 1 }}
@@ -514,7 +514,7 @@ const PatientReports = () => {
       {/* Report Details Modal */}
       <AnimatePresence>
         {selectedReport && (
-          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+          <div className="fixed inset-0 bg-black/30 bg-opacity-50 flex items-center justify-center p-4 z-50">
             <motion.div
               initial={{ opacity: 0, scale: 0.9 }}
               animate={{ opacity: 1, scale: 1 }}
@@ -587,7 +587,7 @@ const PatientReports = () => {
       {/* Analytics Modal */}
       <AnimatePresence>
         {showAnalyticsModal && selectedAnalytics && (
-          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+          <div className="fixed inset-0 bg-black/30 bg-opacity-50 flex items-center justify-center p-4 z-50">
             <motion.div
               initial={{ opacity: 0, scale: 0.9 }}
               animate={{ opacity: 1, scale: 1 }}
@@ -704,7 +704,7 @@ const PatientReports = () => {
       {/* Recommendations Modal */}
       <AnimatePresence>
         {showRecommendationsModal && selectedRecommendations && (
-          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+          <div className="fixed inset-0 bg-black/30 bg-opacity-50 flex items-center justify-center p-4 z-50">
             <motion.div
               initial={{ opacity: 0, scale: 0.9 }}
               animate={{ opacity: 1, scale: 1 }}
