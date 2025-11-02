@@ -22,6 +22,7 @@ import {
 } from 'react-icons/fa';
 import { useAuth } from '../../context/AuthContext';
 import DoctorBookings from '../../components/bookings/DoctorBookings';
+import DoctorPatients from '../../components/reports/DoctorPatients';
 import api from '../../utils/api';
 
 const DoctorDashboard = () => {
@@ -304,6 +305,16 @@ const DoctorDashboard = () => {
             >
               Appointments
             </button>
+            <button
+              onClick={() => setActiveTab('patients')}
+              className={`px-6 py-2 rounded-md text-sm font-medium transition-all duration-300 ${
+                activeTab === 'patients' 
+                  ? 'bg-pink-600 text-white' 
+                  : 'text-gray-600 hover:text-gray-800 hover:bg-gray-100'
+              }`}
+            >
+              My Patients
+            </button>
           </div>
         </motion.div>
 
@@ -497,6 +508,11 @@ const DoctorDashboard = () => {
         {/* Appointments Tab */}
         {activeTab === 'appointments' && (
           <DoctorBookings />
+        )}
+
+        {/* Patients Tab */}
+        {activeTab === 'patients' && (
+          <DoctorPatients />
         )}
       </div>
 

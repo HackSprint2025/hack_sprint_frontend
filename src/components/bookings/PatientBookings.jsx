@@ -31,14 +31,16 @@ const PatientBookings = () => {
   const loadBookings = async () => {
     try {
       setLoading(true);
-      const response = await bookingService.getPatientBookings(user.id);
+      setError('');
+      const response = await bookingService.getPatientBookings();
+      
       if (response.success) {
-        setBookings(response.data);
+        setBookings(response.data || []);
       } else {
-        setError(response.message);
+        setError(response.message || 'Failed to load appointments');
       }
     } catch (error) {
-      setError('Failed to load bookings');
+      setError(error.message || 'Failed to load appointments');
       console.error('Error loading bookings:', error);
     } finally {
       setLoading(false);
@@ -78,15 +80,15 @@ const PatientBookings = () => {
 
   if (error) {
     return (
-      <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-6 text-center">
-        <h3 className="text-lg font-semibold text-yellow-800 mb-2">Booking System Notice</h3>
-        <p className="text-yellow-700 mb-4">
-          The patient booking retrieval feature is not yet implemented in the backend. 
-          This is a placeholder for future functionality.
-        </p>
-        <p className="text-sm text-yellow-600">
-          In the meantime, you can schedule new appointments and they will be sent to doctors for approval.
-        </p>
+      <div className="bg-red-50 border border-red-200 rounded-lg p-6 text-center">
+        <h3 className="text-lg font-semibold text-red-800 mb-2">Error Loading Appointments</h3>
+        <p className="text-red-700 mb-4">{error}</p>
+        <button 
+          onClick={loadBookings}
+          className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors duration-300"
+        >
+          Try Again
+        </button>
       </div>
     );
   }
@@ -215,7 +217,7 @@ const PatientBookings = () => {
 
       {/* Booking Details Modal */}
       {selectedBooking && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+        <div className="fixed inset-0 bg-black/30 bg-opacity-50 flex items-center justify-center p-4 z-50">
           <motion.div
             initial={{ opacity: 0, scale: 0.9 }}
             animate={{ opacity: 1, scale: 1 }}

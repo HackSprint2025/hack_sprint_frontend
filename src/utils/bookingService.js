@@ -27,35 +27,44 @@ class BookingService {
 
   // Note: These methods would need to be implemented in the backend
   // For now, we'll create placeholder methods that can be implemented later
-  async getPatientBookings(patientId) {
+  async getPatientBookings(patientId = null, status = null) {
     try {
-      // This endpoint doesn't exist in backend yet
-      // Would need: GET /api/booking/patient/all
-      const response = await apiClient.get(`/booking/patient/all`);
-      return response;
-    } catch (error) {
-      console.warn('Patient booking retrieval not implemented in backend yet');
-      // Return mock data for now
+      const queryParams = status ? `?status=${status}` : '';
+      const response = await apiClient.get(`/booking/patient/all${queryParams}`);
+      
       return {
         success: true,
-        data: [],
-        message: 'Patient booking retrieval not yet implemented'
+        data: response.data.bookings,
+        count: response.data.count,
+        message: response.data.message
       };
+    } catch (error) {
+      console.error('Error fetching patient bookings:', error);
+      if (error.response?.status === 401) {
+        throw new Error('Please log in to view your appointments');
+      }
+      throw new Error(error.response?.data?.message || 'Failed to fetch appointments');
     }
   }
 
   async getPatientBookingById(bookingId) {
     try {
-      // This endpoint doesn't exist in backend yet
-      // Would need: GET /api/booking/patient/:bookingId
       const response = await apiClient.get(`/booking/patient/${bookingId}`);
-      return response;
-    } catch (error) {
-      console.warn('Patient booking detail retrieval not implemented in backend yet');
+      
       return {
-        success: false,
-        message: 'Patient booking detail retrieval not yet implemented'
+        success: true,
+        data: response.data.data,
+        message: 'Booking retrieved successfully'
       };
+    } catch (error) {
+      console.error('Error fetching patient booking by ID:', error);
+      if (error.response?.status === 404) {
+        throw new Error('Appointment not found');
+      }
+      if (error.response?.status === 401) {
+        throw new Error('Please log in to view appointment details');
+      }
+      throw new Error(error.response?.data?.message || 'Failed to fetch appointment details');
     }
   }
 
@@ -114,7 +123,7 @@ class BookingService {
   // Utility methods
   async getAllDoctors() {
     try {
-      const response = await api.get('/admin/doctors/all');
+      const response = await apiClient.get('/admin/doctors/all');
       
       if (response.data && response.data.doctors) {
         return {

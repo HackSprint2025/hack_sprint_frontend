@@ -20,7 +20,9 @@ import {
 } from 'react-icons/fa';
 import { useAuth } from '../../context/AuthContext';
 import PatientBookings from '../../components/bookings/PatientBookings';
+import PatientReports from '../../components/reports/PatientReports';
 import patientService from '../../utils/patientService';
+import reportService from '../../utils/reportService';
 
 const PatientDashboard = () => {
   const { user, isAuthenticated, loading: authLoading } = useAuth();
@@ -77,8 +79,8 @@ const PatientDashboard = () => {
           setPatientProfile(profileResponse.data);
         }
 
-        // Fetch patient reports
-        const reportsResponse = await patientService.getReports();
+        // Fetch patient reports using the correct report service
+        const reportsResponse = await reportService.getPatientReports();
         if (reportsResponse.success) {
           setUploadedReports(reportsResponse.data);
         }
@@ -109,21 +111,16 @@ const PatientDashboard = () => {
       try {
         setLoading(true);
         
-        // Upload report using patient service
-        const uploadResponse = await patientService.uploadReport(selectedFile, {
-          notes: 'Uploaded from patient dashboard'
-        });
+        // Upload report using report service
+        const formData = reportService.createFormData(selectedFile, 'Uploaded from patient dashboard');
+        const uploadResponse = await reportService.uploadReport(formData);
         
         if (uploadResponse.success) {
-          // Add the new report to the list
-          const newReport = {
-            id: uploadResponse.data.id,
-            name: uploadResponse.data.name,
-            uploadDate: uploadResponse.data.uploadDate || new Date().toISOString().split('T')[0],
-            status: uploadResponse.data.status || "processing",
-            predictions: []
-          };
-          setUploadedReports([newReport, ...uploadedReports]);
+          // Reload reports to get the updated list from backend
+          const updatedReportsResponse = await reportService.getPatientReports();
+          if (updatedReportsResponse.success) {
+            setUploadedReports(updatedReportsResponse.data);
+          }
           
           // Show success message
           alert('Report uploaded successfully! It will be processed shortly.');
@@ -151,8 +148,25 @@ const PatientDashboard = () => {
     setConsentAgreed(false);
   };
 
-  const handleDeleteReport = (id) => {
-    setUploadedReports(uploadedReports.filter(report => report.id !== id));
+  const handleDeleteReport = async (id) => {
+    if (!window.confirm('Are you sure you want to delete this report? This action cannot be undone.')) {
+      return;
+    }
+
+    try {
+      await reportService.deleteReport(id);
+      
+      // Reload reports from backend
+      const updatedReportsResponse = await reportService.getPatientReports();
+      if (updatedReportsResponse.success) {
+        setUploadedReports(updatedReportsResponse.data);
+      }
+      
+      alert('Report deleted successfully!');
+    } catch (error) {
+      console.error('Error deleting report:', error);
+      alert('Failed to delete report: ' + error.message);
+    }
   };
 
   const getRiskColor = (risk) => {
@@ -272,6 +286,16 @@ const PatientDashboard = () => {
             >
               Appointments
             </button>
+            <button
+              onClick={() => setActiveTab('reports')}
+              className={`px-6 py-2 rounded-md text-sm font-medium transition-all duration-300 ${
+                activeTab === 'reports' 
+                  ? 'bg-pink-600 text-white' 
+                  : 'text-gray-600 hover:text-gray-800 hover:bg-gray-100'
+              }`}
+            >
+              My Reports
+            </button>
           </div>
         </motion.div>
 
@@ -377,11 +401,16 @@ const PatientDashboard = () => {
                         <div className="flex items-center">
                           <FaFilePdf className="text-red-500 text-xl mr-3" />
                           <div>
-                            <h3 className="font-semibold text-gray-800">{report.name}</h3>
+                            <h3 className="font-semibold text-gray-800">
+                              {report.file ? report.file.split('/').pop() : 'Medical Report'}
+                            </h3>
                             <div className="flex items-center text-sm text-gray-600">
                               <FaCalendar className="mr-1" />
-                              {new Date(report.uploadDate).toLocaleDateString()}
+                              {new Date(report.createdAt).toLocaleDateString()}
                             </div>
+                            {report.notes && (
+                              <div className="text-sm text-gray-500 mt-1">{report.notes}</div>
+                            )}
                           </div>
                         </div>
                         
@@ -399,41 +428,40 @@ const PatientDashboard = () => {
                         </div>
                       </div>
                       
-                      {report.predictions.length > 0 && (
-                        <div className="space-y-3">
-                          <h4 className="font-medium text-gray-700">AI Predictions:</h4>
-                          {report.predictions.map((prediction, idx) => {
-                            const CategoryIcon = getCategoryIcon(prediction.category);
-                            
-                            return (
-                              <div key={idx} className="flex items-center justify-between bg-gray-50 p-3 rounded-lg">
-                                <div className="flex items-center">
-                                  <CategoryIcon className="text-pink-600 mr-3" />
-                                  <div>
-                                    <div className="font-medium text-gray-800">{prediction.disease}</div>
-                                    <div className="text-sm text-gray-600">{prediction.category}</div>
-                                  </div>
-                                </div>
-                                <div className="text-right">
-                                  <span className={`px-3 py-1 rounded-full text-xs font-medium ${getRiskColor(prediction.risk)}`}>
-                                    {prediction.risk} Risk
-                                  </span>
-                                  <div className="text-sm text-gray-600 mt-1">{prediction.probability}</div>
-                                </div>
-                              </div>
-                            );
-                          })}
-                          
-                          <div className="flex space-x-3 mt-4">
-                            <button className="flex items-center text-pink-600 hover:text-pink-700 text-sm">
-                              <FaDownload className="mr-1" />
-                              Download Report
-                            </button>
-                            <button className="flex items-center text-green-600 hover:text-green-700 text-sm">
-                              <FaInfoCircle className="mr-1" />
-                              View Recommendations
-                            </button>
+                      {/* Show report details and download link */}
+                      <div className="bg-gray-50 p-4 rounded-lg">
+                        <div className="flex justify-between items-center">
+                          <div>
+                            <p className="text-sm text-gray-600">
+                              <strong>Status:</strong> {report.status}
+                            </p>
+                            <p className="text-sm text-gray-600">
+                              <strong>File ID:</strong> {report.id.slice(0, 8)}...
+                            </p>
                           </div>
+                          <div className="flex space-x-3">
+                            {report.file && (
+                              <a
+                                href={report.file}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="flex items-center text-pink-600 hover:text-pink-700 text-sm"
+                              >
+                                <FaDownload className="mr-1" />
+                                Download PDF
+                              </a>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Placeholder for future AI analysis integration */}
+                      {report.status === 'analyzed' && (
+                        <div className="bg-blue-50 p-4 rounded-lg mt-4">
+                          <p className="text-sm text-blue-700">
+                            <FaInfoCircle className="inline mr-1" />
+                            Report has been analyzed. AI predictions will be available soon.
+                          </p>
                         </div>
                       )}
                       
@@ -514,6 +542,11 @@ const PatientDashboard = () => {
         {/* Appointments Tab */}
         {activeTab === 'appointments' && (
           <PatientBookings />
+        )}
+
+        {/* Reports Tab */}
+        {activeTab === 'reports' && (
+          <PatientReports />
         )}
       </div>
 
