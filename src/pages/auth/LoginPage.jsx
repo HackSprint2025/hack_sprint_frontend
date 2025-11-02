@@ -1,7 +1,8 @@
 import { useState } from 'react';
 import { motion } from 'framer-motion';
-import { FaUser, FaUserMd, FaEnvelope, FaLock, FaEye, FaEyeSlash, FaHeart } from 'react-icons/fa';
-import { Link } from 'react-router-dom';
+import { FaUser, FaUserMd, FaEnvelope, FaLock, FaEye, FaEyeSlash, FaHeart, FaSpinner } from 'react-icons/fa';
+import { Link, useNavigate } from 'react-router-dom';
+import { useAuth } from '../../context/AuthContext';
 
 const LoginPage = () => {
   const [userType, setUserType] = useState('patient');
@@ -10,18 +11,42 @@ const LoginPage = () => {
     email: '',
     password: ''
   });
+  const [error, setError] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  
+  const { login } = useAuth();
+  const navigate = useNavigate();
 
   const handleInputChange = (e) => {
     setFormData({
       ...formData,
       [e.target.name]: e.target.value
     });
+    // Clear error when user types
+    if (error) setError('');
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    console.log('Login attempt:', { ...formData, userType });
-    // Handle login logic here
+    setError('');
+    setIsSubmitting(true);
+
+    try {
+      const response = await login(formData.email, formData.password, userType);
+      
+      if (response.success) {
+        // Redirect based on user type
+        if (userType === 'patient') {
+          navigate('/patient-dashboard');
+        } else {
+          navigate('/doctor-dashboard');
+        }
+      }
+    } catch (error) {
+      setError(error.message || 'Login failed. Please try again.');
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -76,6 +101,17 @@ const LoginPage = () => {
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-6">
+            {/* Error Message */}
+            {error && (
+              <motion.div
+                initial={{ opacity: 0, y: -10 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg"
+              >
+                {error}
+              </motion.div>
+            )}
+
             {/* Email Field */}
             <div>
               <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-2">
@@ -154,12 +190,24 @@ const LoginPage = () => {
 
             {/* Submit Button */}
             <motion.button
-              whileHover={{ scale: 1.02 }}
-              whileTap={{ scale: 0.98 }}
+              whileHover={{ scale: isSubmitting ? 1 : 1.02 }}
+              whileTap={{ scale: isSubmitting ? 1 : 0.98 }}
               type="submit"
-              className="w-full bg-pink-500 hover:bg-pink-600 text-white py-3 px-4 rounded-lg font-semibold hover:shadow-lg transition-all duration-300"
+              disabled={isSubmitting}
+              className={`w-full py-3 px-4 rounded-lg font-semibold transition-all duration-300 flex items-center justify-center ${
+                isSubmitting 
+                  ? 'bg-gray-400 cursor-not-allowed' 
+                  : 'bg-pink-500 hover:bg-pink-600 hover:shadow-lg'
+              } text-white`}
             >
-              Sign In as {userType === 'patient' ? 'Patient' : 'Doctor'}
+              {isSubmitting ? (
+                <>
+                  <FaSpinner className="animate-spin mr-2" />
+                  Signing In...
+                </>
+              ) : (
+                `Sign In as ${userType === 'patient' ? 'Patient' : 'Doctor'}`
+              )}
             </motion.button>
           </form>
 

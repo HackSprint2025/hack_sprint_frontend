@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { 
   FaUser, 
@@ -16,25 +16,30 @@ import {
   FaLock,
   FaTrash,
   FaEye,
-  FaDownload
+  FaDownload,
+  FaSpinner
 } from 'react-icons/fa';
+import { useAuth } from '../../context/AuthContext';
 
 const PatientProfile = () => {
+  const { user, updateProfile, loading } = useAuth();
   const [isEditing, setIsEditing] = useState(false);
   const [activeTab, setActiveTab] = useState('personal');
   const [profileData, setProfileData] = useState({
-    firstName: 'John',
-    lastName: 'Doe',
-    email: 'john.doe@email.com',
-    phone: '+1 (555) 123-4567',
-    dateOfBirth: '1985-06-15',
-    gender: 'male',
-    address: '123 Main Street, City, State 12345',
-    emergencyContact: '+1 (555) 987-6543',
-    bloodType: 'O+',
-    allergies: 'Penicillin, Peanuts',
-    medicalHistory: 'Hypertension, Diabetes Type 2'
+    firstName: '',
+    lastName: '',
+    email: '',
+    phone: '',
+    dateOfBirth: '',
+    gender: '',
+    address: '',
+    emergencyContact: '',
+    bloodType: '',
+    allergies: '',
+    medicalHistory: ''
   });
+  const [updateLoading, setUpdateLoading] = useState(false);
+  const [updateError, setUpdateError] = useState('');
 
   const [notifications, setNotifications] = useState({
     emailReports: true,
@@ -48,6 +53,26 @@ const PatientProfile = () => {
     { id: 2, name: 'ECG Report', date: '2025-10-25', status: 'Analyzed' },
     { id: 3, name: 'Chest X-Ray', date: '2025-10-20', status: 'Processing' }
   ];
+
+  // Initialize profile data from user context
+  useEffect(() => {
+    if (user) {
+      const nameParts = user.fullName ? user.fullName.split(' ') : ['', ''];
+      setProfileData({
+        firstName: nameParts[0] || '',
+        lastName: nameParts.slice(1).join(' ') || '',
+        email: user.email || '',
+        phone: user.phoneNumber || '',
+        dateOfBirth: user.dateOfBirth || '',
+        gender: user.gender || '',
+        address: user.address || '',
+        emergencyContact: user.emergencyContactNumber || '',
+        bloodType: user.bloodGroup || '',
+        allergies: user.allergies || '',
+        medicalHistory: user.medicalHistory || ''
+      });
+    }
+  }, [user]);
 
   const handleInputChange = (e) => {
     setProfileData({
@@ -63,15 +88,53 @@ const PatientProfile = () => {
     });
   };
 
-  const handleSave = () => {
-    // Save profile logic here
-    setIsEditing(false);
-    console.log('Profile saved:', profileData);
+  const handleSave = async () => {
+    setUpdateLoading(true);
+    setUpdateError('');
+    
+    try {
+      // Map frontend form data to backend expected format
+      const updateData = {
+        fullName: `${profileData.firstName} ${profileData.lastName}`.trim(),
+        phoneNumber: profileData.phone,
+        dateOfBirth: profileData.dateOfBirth,
+        gender: profileData.gender,
+        address: profileData.address,
+        emergencyContactNumber: profileData.emergencyContact,
+        bloodGroup: profileData.bloodType,
+        allergies: profileData.allergies,
+        medicalHistory: profileData.medicalHistory
+      };
+
+      await updateProfile(updateData);
+      setIsEditing(false);
+    } catch (error) {
+      setUpdateError(error.message);
+    } finally {
+      setUpdateLoading(false);
+    }
   };
 
   const handleCancel = () => {
     setIsEditing(false);
-    // Reset form data if needed
+    setUpdateError('');
+    // Reset form data to original user data
+    if (user) {
+      const nameParts = user.fullName ? user.fullName.split(' ') : ['', ''];
+      setProfileData({
+        firstName: nameParts[0] || '',
+        lastName: nameParts.slice(1).join(' ') || '',
+        email: user.email || '',
+        phone: user.phoneNumber || '',
+        dateOfBirth: user.dateOfBirth || '',
+        gender: user.gender || '',
+        address: user.address || '',
+        emergencyContact: user.emergencyContactNumber || '',
+        bloodType: user.bloodGroup || '',
+        allergies: user.allergies || '',
+        medicalHistory: user.medicalHistory || ''
+      });
+    }
   };
 
   const tabs = [
@@ -104,13 +167,13 @@ const PatientProfile = () => {
               </div>
               <div>
                 <h1 className="text-3xl font-bold text-gray-800">
-                  {profileData.firstName} {profileData.lastName}
+                  {user?.fullName || `${profileData.firstName} ${profileData.lastName}`.trim() || 'User'}
                 </h1>
                 <p className="text-gray-600 flex items-center mt-1">
                   <FaShieldAlt className="mr-2 text-green-500" />
-                  Patient ID: P{Date.now().toString().slice(-6)}
+                  Patient ID: P{user?.id?.slice(-6) || '000000'}
                 </p>
-                <p className="text-gray-600">{profileData.email}</p>
+                <p className="text-gray-600">{user?.email || profileData.email}</p>
               </div>
             </div>
             
@@ -187,13 +250,34 @@ const PatientProfile = () => {
                     {isEditing && (
                       <button
                         onClick={handleSave}
-                        className="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 flex items-center"
+                        disabled={updateLoading}
+                        className={`px-4 py-2 rounded-lg flex items-center transition-all duration-300 ${
+                          updateLoading 
+                            ? 'bg-gray-400 cursor-not-allowed' 
+                            : 'bg-green-600 hover:bg-green-700'
+                        } text-white`}
                       >
-                        <FaSave className="mr-2" />
-                        Save Changes
+                        {updateLoading ? (
+                          <>
+                            <FaSpinner className="animate-spin mr-2" />
+                            Saving...
+                          </>
+                        ) : (
+                          <>
+                            <FaSave className="mr-2" />
+                            Save Changes
+                          </>
+                        )}
                       </button>
                     )}
                   </div>
+
+                  {/* Error Message */}
+                  {updateError && (
+                    <div className="mb-4 p-4 bg-red-50 border border-red-200 text-red-700 rounded-lg">
+                      {updateError}
+                    </div>
+                  )}
 
                   <div className="grid md:grid-cols-2 gap-6">
                     <div>

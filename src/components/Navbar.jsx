@@ -1,20 +1,39 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
-import { FaHeart, FaBars, FaTimes, FaUserMd, FaUser, FaHome, FaInfoCircle, FaPlusCircle, FaUserAlt, FaEnvelope } from 'react-icons/fa';
+import { FaHeart, FaBars, FaTimes, FaUserMd, FaUser, FaHome, FaInfoCircle, FaPlusCircle, FaUserAlt, FaEnvelope, FaSignOutAlt } from 'react-icons/fa';
 import { Link, useLocation } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
 
 function Navbar() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const location = useLocation();
+  const { isAuthenticated, user, userType, logout } = useAuth();
 
-  const navItems = [
+  // Base navigation items (always visible)
+  const publicNavItems = [
     { name: 'Home', path: '/', icon: FaHome },
     { name: 'About', path: '/about', icon: FaInfoCircle },
     { name: 'Contact', path: '/contact', icon: FaEnvelope },
-    { name: 'Profile', path: '/profile', icon: FaUserAlt },
   ];
 
+  // Profile item (only visible when authenticated)
+  const profileNavItem = { name: 'Profile', path: '/profile', icon: FaUserAlt };
+
+  // Combine nav items based on authentication status
+  const navItems = isAuthenticated 
+    ? [...publicNavItems, profileNavItem] 
+    : publicNavItems;
+
   const isActive = (path) => location.pathname === path;
+
+  const handleLogout = async () => {
+    try {
+      await logout();
+      setIsMenuOpen(false);
+    } catch (error) {
+      console.error('Logout error:', error);
+    }
+  };
 
   return (
     <motion.nav 
@@ -66,29 +85,68 @@ function Navbar() {
 
           {/* Auth Buttons */}
           <div className="hidden md:flex items-center space-x-4">
-            <div className="flex space-x-2">
-              <Link to="/login">
+            {isAuthenticated ? (
+              <div className="flex items-center space-x-2">
+                {/* User Info */}
+                <div className="flex items-center space-x-3">
+                  <div className="text-right">
+                    <p className="text-sm font-medium text-gray-700">
+                      {user?.fullName || 'User'}
+                    </p>
+                    <p className="text-xs text-gray-500 capitalize">
+                      {userType}
+                    </p>
+                  </div>
+                </div>
+
+                {/* Dashboard Link */}
+                <Link to={userType === 'patient' ? '/patient-dashboard' : '/doctor-dashboard'}>
+                  <motion.button
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
+                    className="border-2 border-green-500 hover:border-green-600 text-green-500 hover:text-green-600 px-4 py-2 rounded-full font-medium hover:shadow-lg transition-all duration-300 flex items-center"
+                  >
+                    <FaUserMd className="mr-2 text-sm" />
+                    Dashboard
+                  </motion.button>
+                </Link>
+
+                {/* Logout Button */}
                 <motion.button
                   whileHover={{ scale: 1.02 }}
                   whileTap={{ scale: 0.98 }}
-                  className="bg-pink-500 hover:bg-pink-600 text-white px-4 py-2 rounded-full font-medium hover:shadow-lg transition-all duration-300 flex items-center cursor-pointer"
+                  onClick={handleLogout}
+                  className="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-full font-medium hover:shadow-lg transition-all duration-300 flex items-center"
                 >
-                  <FaUser className="mr-2 text-sm" />
-                  Login
+                  <FaSignOutAlt className="mr-2 text-sm" />
+                  Logout
                 </motion.button>
-              </Link>
-              
-              <Link to="/patient-dashboard">
-                <motion.button
-                  whileHover={{ scale: 1.02 }}
-                  whileTap={{ scale: 0.98 }}
-                  className="hover:border-green-600 border-2 border-green-500 text-white px-4 py-2 rounded-full font-medium hover:shadow-lg transition-all duration-300 flex items-center cursor-pointer"
-                >
-                  <FaUserMd className="mr-2 text-sm text-green-500" />
-                  <p className='text-green-500'>Dashboard</p>
-                </motion.button>
-              </Link>
-            </div>
+              </div>
+            ) : (
+              <div className="flex space-x-2">
+                <Link to="/login">
+                  <motion.button
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
+                    className="bg-pink-500 hover:bg-pink-600 text-white px-4 py-2 rounded-full font-medium hover:shadow-lg transition-all duration-300 flex items-center cursor-pointer"
+                  >
+                    <FaUser className="mr-2 text-sm" />
+                    Login
+                  </motion.button>
+                </Link>
+                
+                <Link to="/signup">
+                  <motion.button
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
+                    className="border-2 border-green-500 hover:border-green-600 text-green-500 hover:text-green-600 px-4 py-2 rounded-full font-medium hover:shadow-lg transition-all duration-300 flex items-center cursor-pointer"
+                  >
+                    <FaUserMd className="mr-2 text-sm" />
+                    Sign Up
+                  </motion.button>
+                </Link>
+              </div>
+            )}
           </div>
 
           {/* Mobile menu button */}
@@ -134,23 +192,56 @@ function Navbar() {
           })}
           
           <div className="border-t border-gray-100 pt-4 space-y-3">
-            <Link
-              to="/login"
-              onClick={() => setIsMenuOpen(false)}
-              className="flex items-center px-3 py-2 bg-pink-500 hover:bg-pink-600 text-white rounded-lg transition-colors duration-300"
-            >
-              <FaUser className="mr-3" />
-              Login
-            </Link>
-            
-            <Link
-              to="/patient-dashboard"
-              onClick={() => setIsMenuOpen(false)}
-              className="flex items-center px-3 py-2 bg-green-500 hover:bg-green-600 text-white rounded-lg transition-colors duration-300"
-            >
-              <FaUserMd className="mr-3" />
-              Dashboard
-            </Link>
+            {isAuthenticated ? (
+              <>
+                {/* User Info Mobile */}
+                <div className="px-3 py-2">
+                  <p className="text-sm font-medium text-gray-700">
+                    {user?.fullName || 'User'}
+                  </p>
+                  <p className="text-xs text-gray-500 capitalize">
+                    {userType}
+                  </p>
+                </div>
+
+                <Link
+                  to={userType === 'patient' ? '/patient-dashboard' : '/doctor-dashboard'}
+                  onClick={() => setIsMenuOpen(false)}
+                  className="flex items-center px-3 py-2 bg-green-500 hover:bg-green-600 text-white rounded-lg transition-colors duration-300"
+                >
+                  <FaUserMd className="mr-3" />
+                  Dashboard
+                </Link>
+
+                <button
+                  onClick={handleLogout}
+                  className="flex items-center w-full px-3 py-2 bg-red-500 hover:bg-red-600 text-white rounded-lg transition-colors duration-300"
+                >
+                  <FaSignOutAlt className="mr-3" />
+                  Logout
+                </button>
+              </>
+            ) : (
+              <>
+                <Link
+                  to="/login"
+                  onClick={() => setIsMenuOpen(false)}
+                  className="flex items-center px-3 py-2 bg-pink-500 hover:bg-pink-600 text-white rounded-lg transition-colors duration-300"
+                >
+                  <FaUser className="mr-3" />
+                  Login
+                </Link>
+                
+                <Link
+                  to="/signup"
+                  onClick={() => setIsMenuOpen(false)}
+                  className="flex items-center px-3 py-2 bg-green-500 hover:bg-green-600 text-white rounded-lg transition-colors duration-300"
+                >
+                  <FaUserMd className="mr-3" />
+                  Sign Up
+                </Link>
+              </>
+            )}
           </div>
         </div>
       </motion.div>

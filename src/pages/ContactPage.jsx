@@ -147,22 +147,22 @@ const ContactPage = () => {
             transition={{ delay: 0.2, type: "spring", stiffness: 200 }}
             className="w-20 h-20 bg-white bg-opacity-20 rounded-full flex items-center justify-center mx-auto mb-6"
           >
-            <FaComments className="text-3xl text-white" />
+            <FaComments className="text-4xl text-gray-700" />
           </motion.div>
           <h1 className="text-5xl md:text-6xl font-bold mb-6">Contact Us</h1>
           <p className="text-xl md:text-2xl mb-8 opacity-90">
             Get in touch with our healthcare experts. We're here to help you with any questions about our AI-powered healthcare solutions.
           </p>
           <div className="flex flex-wrap justify-center gap-4">
-            <div className="flex items-center bg-white bg-opacity-20 px-4 py-2 rounded-full">
+            <div className="flex items-center bg-white text-gray-700 bg-opacity-20 px-4 py-2 rounded-full">
               <FaCheckCircle className="mr-2" />
               <span>24/7 Support</span>
             </div>
-            <div className="flex items-center bg-white bg-opacity-20 px-4 py-2 rounded-full">
+            <div className="flex items-center bg-white text-gray-700 bg-opacity-20 px-4 py-2 rounded-full">
               <FaCheckCircle className="mr-2" />
               <span>HIPAA Compliant</span>
             </div>
-            <div className="flex items-center bg-white bg-opacity-20 px-4 py-2 rounded-full">
+            <div className="flex items-center bg-white text-gray-700 bg-opacity-20 px-4 py-2 rounded-full">
               <FaCheckCircle className="mr-2" />
               <span>Expert Team</span>
             </div>
@@ -452,29 +452,6 @@ const ContactPage = () => {
         </div>
       </motion.section>
 
-      {/* Emergency Contact */}
-      <motion.section 
-        initial={{ opacity: 0, y: 30 }}
-        whileInView={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.8 }}
-        viewport={{ once: true }}
-        className="py-16 px-4 bg-red-600 text-white"
-      >
-        <div className="max-w-4xl mx-auto text-center">
-          <h2 className="text-3xl md:text-4xl font-bold mb-4">Medical Emergency?</h2>
-          <p className="text-xl mb-8 opacity-90">
-            If you're experiencing a medical emergency, please call 911 immediately or go to your nearest emergency room.
-          </p>
-          <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <a href="tel:911" className="bg-white text-red-600 px-8 py-4 rounded-lg font-bold text-lg hover:shadow-lg transition-all duration-300">
-              Call 911
-            </a>
-            <a href="tel:+15551234567" className="bg-red-700 text-white px-8 py-4 rounded-lg font-bold text-lg hover:shadow-lg transition-all duration-300">
-              24/7 Nurse Hotline
-            </a>
-          </div>
-        </div>
-      </motion.section>
     </div>
   );
 };

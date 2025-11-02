@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { 
   FaUpload, 
@@ -15,13 +15,22 @@ import {
   FaTrash,
   FaExclamationTriangle,
   FaCheckCircle,
-  FaInfoCircle
+  FaInfoCircle,
+  FaSpinner
 } from 'react-icons/fa';
+import { useAuth } from '../../context/AuthContext';
+import PatientBookings from '../../components/bookings/PatientBookings';
+import patientService from '../../utils/patientService';
 
 const PatientDashboard = () => {
+  const { user, isAuthenticated, loading: authLoading } = useAuth();
+  const [activeTab, setActiveTab] = useState('dashboard');
   const [selectedFile, setSelectedFile] = useState(null);
   const [showConsentModal, setShowConsentModal] = useState(false);
   const [consentAgreed, setConsentAgreed] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
+  const [patientProfile, setPatientProfile] = useState(null);
   const [uploadedReports, setUploadedReports] = useState([
     {
       id: 1,
@@ -51,6 +60,40 @@ const PatientDashboard = () => {
     }
   ]);
 
+  // Fetch patient profile and data
+  useEffect(() => {
+    const fetchPatientData = async () => {
+      if (!isAuthenticated || !user || authLoading) {
+        return;
+      }
+
+      try {
+        setLoading(true);
+        setError('');
+
+        // Fetch patient profile
+        const profileResponse = await patientService.getProfile();
+        if (profileResponse.success) {
+          setPatientProfile(profileResponse.data);
+        }
+
+        // Fetch patient reports
+        const reportsResponse = await patientService.getReports();
+        if (reportsResponse.success) {
+          setUploadedReports(reportsResponse.data);
+        }
+
+      } catch (error) {
+        console.error('Error fetching patient data:', error);
+        setError('Failed to load patient data');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchPatientData();
+  }, [isAuthenticated, user, authLoading]);
+
   const handleFileChange = (event) => {
     setSelectedFile(event.target.files[0]);
   };
@@ -61,21 +104,45 @@ const PatientDashboard = () => {
     }
   };
 
-  const handleConsentAccept = () => {
+  const handleConsentAccept = async () => {
     if (selectedFile && consentAgreed) {
-      const newReport = {
-        id: uploadedReports.length + 1,
-        name: selectedFile.name,
-        uploadDate: new Date().toISOString().split('T')[0],
-        status: "processing",
-        predictions: []
-      };
-      setUploadedReports([newReport, ...uploadedReports]);
-      setSelectedFile(null);
-      setShowConsentModal(false);
-      setConsentAgreed(false);
-      // Reset file input
-      document.getElementById('file-upload').value = '';
+      try {
+        setLoading(true);
+        
+        // Upload report using patient service
+        const uploadResponse = await patientService.uploadReport(selectedFile, {
+          notes: 'Uploaded from patient dashboard'
+        });
+        
+        if (uploadResponse.success) {
+          // Add the new report to the list
+          const newReport = {
+            id: uploadResponse.data.id,
+            name: uploadResponse.data.name,
+            uploadDate: uploadResponse.data.uploadDate || new Date().toISOString().split('T')[0],
+            status: uploadResponse.data.status || "processing",
+            predictions: []
+          };
+          setUploadedReports([newReport, ...uploadedReports]);
+          
+          // Show success message
+          alert('Report uploaded successfully! It will be processed shortly.');
+        } else {
+          alert('Upload failed: ' + uploadResponse.message);
+        }
+      } catch (error) {
+        console.error('Upload error:', error);
+        alert('Upload failed. Please try again.');
+      } finally {
+        setLoading(false);
+        setSelectedFile(null);
+        setShowConsentModal(false);
+        setConsentAgreed(false);
+        // Reset file input
+        if (document.getElementById('file-upload')) {
+          document.getElementById('file-upload').value = '';
+        }
+      }
     }
   };
 
@@ -125,6 +192,37 @@ const PatientDashboard = () => {
     }
   };
 
+  // Show loading state
+  if (authLoading || loading) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <FaSpinner className="animate-spin text-4xl text-pink-600 mx-auto mb-4" />
+          <p className="text-gray-600">Loading your dashboard...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Show error state
+  if (error) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <FaExclamationTriangle className="text-4xl text-red-500 mx-auto mb-4" />
+          <h2 className="text-xl font-semibold text-gray-800 mb-2">Error Loading Dashboard</h2>
+          <p className="text-gray-600 mb-4">{error}</p>
+          <button 
+            onClick={() => window.location.reload()} 
+            className="px-4 py-2 bg-pink-600 text-white rounded-lg hover:bg-pink-700 transition-colors duration-300"
+          >
+            Try Again
+          </button>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-gray-50 py-8 px-4">
       <div className="max-w-7xl mx-auto">
@@ -141,12 +239,45 @@ const PatientDashboard = () => {
             </div>
             <div>
               <h1 className="text-4xl font-bold text-gray-800">Patient Dashboard</h1>
-              <p className="text-gray-600">Welcome back, John Doe</p>
+              <p className="text-gray-600">
+                Welcome back, {patientProfile?.fullName || user?.fullName || 'Patient'}
+              </p>
+              {patientProfile && (
+                <p className="text-sm text-gray-500 mt-1">
+                  {patientProfile.email} • Last login: {patientProfile.lastLogin ? new Date(patientProfile.lastLogin).toLocaleDateString() : 'Today'}
+                </p>
+              )}
             </div>
+          </div>
+
+          {/* Tab Navigation */}
+          <div className="flex space-x-1 bg-white rounded-lg p-1 shadow-sm">
+            <button
+              onClick={() => setActiveTab('dashboard')}
+              className={`px-6 py-2 rounded-md text-sm font-medium transition-all duration-300 ${
+                activeTab === 'dashboard' 
+                  ? 'bg-pink-600 text-white' 
+                  : 'text-gray-600 hover:text-gray-800 hover:bg-gray-100'
+              }`}
+            >
+              Dashboard
+            </button>
+            <button
+              onClick={() => setActiveTab('appointments')}
+              className={`px-6 py-2 rounded-md text-sm font-medium transition-all duration-300 ${
+                activeTab === 'appointments' 
+                  ? 'bg-pink-600 text-white' 
+                  : 'text-gray-600 hover:text-gray-800 hover:bg-gray-100'
+              }`}
+            >
+              Appointments
+            </button>
           </div>
         </motion.div>
 
-        <div className="grid lg:grid-cols-3 gap-8">
+        {/* Tab Content */}
+        {activeTab === 'dashboard' && (
+          <div className="grid lg:grid-cols-3 gap-8">
           {/* Upload Section */}
           <motion.div 
             initial={{ opacity: 0, x: -20 }}
@@ -378,6 +509,12 @@ const PatientDashboard = () => {
             </div>
           </motion.div>
         </div>
+        )}
+
+        {/* Appointments Tab */}
+        {activeTab === 'appointments' && (
+          <PatientBookings />
+        )}
       </div>
 
       {/* Consent Modal */}

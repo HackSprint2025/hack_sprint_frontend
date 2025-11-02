@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { 
   FaUserMd, 
@@ -22,28 +22,33 @@ import {
   FaHospital,
   FaStethoscope,
   FaChartLine,
-  FaClock
+  FaClock,
+  FaSpinner
 } from 'react-icons/fa';
+import { useAuth } from '../../context/AuthContext';
 
 const DoctorProfile = () => {
+  const { user, updateProfile, loading } = useAuth();
   const [isEditing, setIsEditing] = useState(false);
   const [activeTab, setActiveTab] = useState('personal');
   const [profileData, setProfileData] = useState({
-    firstName: 'Dr. Sarah',
-    lastName: 'Mitchell',
-    email: 'sarah.mitchell@healthpredict.com',
-    phone: '+1 (555) 123-4567',
-    specialization: 'Cardiology',
-    licenseNumber: 'MD123456789',
-    yearsOfExperience: '15',
-    hospitalAffiliation: 'HealthPredict Medical Center',
-    education: 'Harvard Medical School, MD',
-    certifications: 'Board Certified Cardiologist, FACC',
-    bio: 'Dr. Sarah Mitchell is a renowned cardiologist with over 15 years of experience in cardiovascular medicine. She specializes in preventive cardiology and early disease detection using AI-powered diagnostics.',
-    consultationFee: '$200',
-    availableHours: '9:00 AM - 5:00 PM',
-    languages: 'English, Spanish, French'
+    firstName: '',
+    lastName: '',
+    email: '',
+    phone: '',
+    specialization: '',
+    licenseNumber: '',
+    yearsOfExperience: '',
+    hospitalAffiliation: '',
+    education: '',
+    certifications: '',
+    bio: '',
+    consultationFee: '',
+    availableHours: '',
+    languages: ''
   });
+  const [updateLoading, setUpdateLoading] = useState(false);
+  const [updateError, setUpdateError] = useState('');
 
   const [notifications, setNotifications] = useState({
     patientAlerts: true,
@@ -65,6 +70,29 @@ const DoctorProfile = () => {
     { id: 3, type: 'prediction_alert', patient: 'Michael Brown', date: '2025-10-26', status: 'High Risk' }
   ];
 
+  // Initialize profile data from user context
+  useEffect(() => {
+    if (user) {
+      const nameParts = user.fullName ? user.fullName.split(' ') : ['', ''];
+      setProfileData({
+        firstName: nameParts[0] || '',
+        lastName: nameParts.slice(1).join(' ') || '',
+        email: user.email || '',
+        phone: user.phoneNumber || '',
+        specialization: user.specialization || '',
+        licenseNumber: user.licenseNumber || '',
+        yearsOfExperience: user.experience?.toString() || '',
+        hospitalAffiliation: user.clinicAddress || '',
+        education: user.qualification || '',
+        certifications: user.qualification || '',
+        bio: user.bio || '',
+        consultationFee: user.consultationFee ? `$${user.consultationFee}` : '',
+        availableHours: '9:00 AM - 5:00 PM', // Default since not in backend
+        languages: 'English' // Default since not in backend
+      });
+    }
+  }, [user]);
+
   const handleInputChange = (e) => {
     setProfileData({
       ...profileData,
@@ -79,13 +107,55 @@ const DoctorProfile = () => {
     });
   };
 
-  const handleSave = () => {
-    setIsEditing(false);
-    console.log('Doctor profile saved:', profileData);
+  const handleSave = async () => {
+    setUpdateLoading(true);
+    setUpdateError('');
+    
+    try {
+      // Map frontend form data to backend expected format
+      const updateData = {
+        fullName: `${profileData.firstName} ${profileData.lastName}`.trim(),
+        specialization: profileData.specialization,
+        qualification: profileData.education,
+        experience: parseInt(profileData.yearsOfExperience) || 0,
+        phoneNumber: profileData.phone,
+        clinicAddress: profileData.hospitalAffiliation,
+        consultationFee: profileData.consultationFee.replace('$', ''),
+        bio: profileData.bio
+      };
+
+      await updateProfile(updateData);
+      setIsEditing(false);
+    } catch (error) {
+      setUpdateError(error.message);
+    } finally {
+      setUpdateLoading(false);
+    }
   };
 
   const handleCancel = () => {
     setIsEditing(false);
+    setUpdateError('');
+    // Reset form data to original user data
+    if (user) {
+      const nameParts = user.fullName ? user.fullName.split(' ') : ['', ''];
+      setProfileData({
+        firstName: nameParts[0] || '',
+        lastName: nameParts.slice(1).join(' ') || '',
+        email: user.email || '',
+        phone: user.phoneNumber || '',
+        specialization: user.specialization || '',
+        licenseNumber: user.licenseNumber || '',
+        yearsOfExperience: user.experience?.toString() || '',
+        hospitalAffiliation: user.clinicAddress || '',
+        education: user.qualification || '',
+        certifications: user.qualification || '',
+        bio: user.bio || '',
+        consultationFee: user.consultationFee ? `$${user.consultationFee}` : '',
+        availableHours: '9:00 AM - 5:00 PM',
+        languages: 'English'
+      });
+    }
   };
 
   const tabs = [
@@ -124,20 +194,20 @@ const DoctorProfile = () => {
               </div>
               <div>
                 <h1 className="text-3xl font-bold text-gray-800">
-                  {profileData.firstName} {profileData.lastName}
+                  {user?.fullName || `${profileData.firstName} ${profileData.lastName}`.trim() || 'Doctor'}
                 </h1>
                 <p className="text-green-600 font-semibold flex items-center mt-1">
                   <FaStethoscope className="mr-2" />
-                  {profileData.specialization} Specialist
+                  {user?.specialization || profileData.specialization || 'General Medicine'} Specialist
                 </p>
                 <div className="flex items-center mt-2 space-x-4">
                   <p className="text-gray-600 flex items-center">
                     <FaShieldAlt className="mr-2 text-green-500" />
-                    License: {profileData.licenseNumber}
+                    License: {user?.licenseNumber || profileData.licenseNumber || 'N/A'}
                   </p>
                   <p className="text-gray-600 flex items-center">
                     <FaAward className="mr-2 text-yellow-500" />
-                    {profileData.yearsOfExperience} years experience
+                    {user?.experience || profileData.yearsOfExperience || '0'} years experience
                   </p>
                 </div>
               </div>
@@ -239,13 +309,34 @@ const DoctorProfile = () => {
                     {isEditing && (
                       <button
                         onClick={handleSave}
-                        className="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 flex items-center"
+                        disabled={updateLoading}
+                        className={`px-4 py-2 rounded-lg flex items-center transition-all duration-300 ${
+                          updateLoading 
+                            ? 'bg-gray-400 cursor-not-allowed' 
+                            : 'bg-green-600 hover:bg-green-700'
+                        } text-white`}
                       >
-                        <FaSave className="mr-2" />
-                        Save Changes
+                        {updateLoading ? (
+                          <>
+                            <FaSpinner className="animate-spin mr-2" />
+                            Saving...
+                          </>
+                        ) : (
+                          <>
+                            <FaSave className="mr-2" />
+                            Save Changes
+                          </>
+                        )}
                       </button>
                     )}
                   </div>
+
+                  {/* Error Message */}
+                  {updateError && (
+                    <div className="mb-4 p-4 bg-red-50 border border-red-200 text-red-700 rounded-lg">
+                      {updateError}
+                    </div>
+                  )}
 
                   <div className="grid md:grid-cols-2 gap-6">
                     <div>

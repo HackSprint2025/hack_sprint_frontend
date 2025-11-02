@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
-import { FaUser, FaUserMd, FaEnvelope, FaLock, FaEye, FaEyeSlash, FaHeart, FaPhone, FaIdCard } from 'react-icons/fa';
-import { Link } from 'react-router-dom';
+import { FaUser, FaUserMd, FaEnvelope, FaLock, FaEye, FaEyeSlash, FaHeart, FaPhone, FaIdCard, FaSpinner, FaCheckCircle } from 'react-icons/fa';
+import { Link, useNavigate } from 'react-router-dom';
+import { useAuth } from '../../context/AuthContext';
 
 const SignupPage = () => {
   const [userType, setUserType] = useState('patient');
@@ -18,18 +19,91 @@ const SignupPage = () => {
     licenseNumber: '', // For doctors
     gender: '' // For patients
   });
+  const [error, setError] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [success, setSuccess] = useState('');
+
+  const { register } = useAuth();
+  const navigate = useNavigate();
 
   const handleInputChange = (e) => {
     setFormData({
       ...formData,
       [e.target.name]: e.target.value
     });
+    // Clear messages when user types
+    if (error) setError('');
+    if (success) setSuccess('');
   };
 
-  const handleSubmit = (e) => {
+  const validateForm = () => {
+    if (!formData.firstName.trim()) return 'First name is required';
+    if (!formData.lastName.trim()) return 'Last name is required';
+    if (!formData.email.trim()) return 'Email is required';
+    if (!formData.phone.trim()) return 'Phone number is required';
+    if (!formData.password) return 'Password is required';
+    if (formData.password !== formData.confirmPassword) return 'Passwords do not match';
+    if (formData.password.length < 6) return 'Password must be at least 6 characters long';
+    
+    if (userType === 'doctor') {
+      if (!formData.specialization) return 'Specialization is required for doctors';
+      if (!formData.licenseNumber.trim()) return 'License number is required for doctors';
+    }
+    
+    if (userType === 'patient') {
+      if (!formData.gender) return 'Gender is required for patients';
+    }
+    
+    return null;
+  };
+
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    console.log('Signup attempt:', { ...formData, userType });
-    // Handle signup logic here
+    setError('');
+    setSuccess('');
+
+    // Validate form
+    const validationError = validateForm();
+    if (validationError) {
+      setError(validationError);
+      return;
+    }
+
+    setIsSubmitting(true);
+
+    try {
+      const response = await register(formData, userType);
+      
+      if (response.success) {
+        if (userType === 'doctor') {
+          setSuccess('Registration successful! Your account is pending admin approval. You will be notified once approved.');
+        } else {
+          setSuccess('Registration successful! You can now log in with your credentials.');
+        }
+        
+        // Reset form
+        setFormData({
+          firstName: '',
+          lastName: '',
+          email: '',
+          phone: '',
+          password: '',
+          confirmPassword: '',
+          specialization: '',
+          licenseNumber: '',
+          gender: ''
+        });
+        
+        // Redirect to login after a short delay
+        setTimeout(() => {
+          navigate('/login');
+        }, 3000);
+      }
+    } catch (error) {
+      setError(error.message || 'Registration failed. Please try again.');
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const specializations = [
@@ -89,6 +163,29 @@ const SignupPage = () => {
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-6">
+            {/* Error Message */}
+            {error && (
+              <motion.div
+                initial={{ opacity: 0, y: -10 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg"
+              >
+                {error}
+              </motion.div>
+            )}
+
+            {/* Success Message */}
+            {success && (
+              <motion.div
+                initial={{ opacity: 0, y: -10 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded-lg flex items-center"
+              >
+                <FaCheckCircle className="mr-2" />
+                {success}
+              </motion.div>
+            )}
+
             {/* Name Fields */}
             <div className="grid grid-cols-2 gap-4">
               <div>
@@ -324,12 +421,24 @@ const SignupPage = () => {
 
             {/* Submit Button */}
             <motion.button
-              whileHover={{ scale: 1.02 }}
-              whileTap={{ scale: 0.98 }}
+              whileHover={{ scale: isSubmitting ? 1 : 1.02 }}
+              whileTap={{ scale: isSubmitting ? 1 : 0.98 }}
               type="submit"
-              className="w-full bg-pink-500 hover:bg-pink-600 text-white py-3 px-4 rounded-lg font-semibold hover:shadow-lg transition-all duration-300"
+              disabled={isSubmitting}
+              className={`w-full py-3 px-4 rounded-lg font-semibold transition-all duration-300 flex items-center justify-center ${
+                isSubmitting 
+                  ? 'bg-gray-400 cursor-not-allowed' 
+                  : 'bg-pink-500 hover:bg-pink-600 hover:shadow-lg'
+              } text-white`}
             >
-              Create {userType === 'patient' ? 'Patient' : 'Doctor'} Account
+              {isSubmitting ? (
+                <>
+                  <FaSpinner className="animate-spin mr-2" />
+                  Creating Account...
+                </>
+              ) : (
+                `Create ${userType === 'patient' ? 'Patient' : 'Doctor'} Account`
+              )}
             </motion.button>
           </form>
 

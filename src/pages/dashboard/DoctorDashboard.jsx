@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { 
   FaUserMd, 
@@ -17,14 +17,24 @@ import {
   FaCalendar,
   FaClock,
   FaPhone,
-  FaEnvelope
+  FaEnvelope,
+  FaSpinner
 } from 'react-icons/fa';
+import { useAuth } from '../../context/AuthContext';
+import DoctorBookings from '../../components/bookings/DoctorBookings';
+import api from '../../utils/api';
 
 const DoctorDashboard = () => {
+  const { user, isAuthenticated, loading: authLoading } = useAuth();
+  const [activeTab, setActiveTab] = useState('dashboard');
   const [selectedSpecialty, setSelectedSpecialty] = useState('Cardiology');
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedPatient, setSelectedPatient] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
+  const [doctorProfile, setDoctorProfile] = useState(null);
+  const [doctorPatients, setDoctorPatients] = useState([]);
 
   // Mock data for doctor's patients by specialty
   const patientsBySpecialty = {
@@ -102,6 +112,67 @@ const DoctorDashboard = () => {
     ]
   };
 
+  // Fetch doctor profile and patients data
+  useEffect(() => {
+    const fetchDoctorData = async () => {
+      if (!isAuthenticated || !user || authLoading) {
+        return;
+      }
+
+      try {
+        setLoading(true);
+        setError('');
+
+        // Fetch doctor profile
+        const profileResponse = await api.get('/doctor/profile');
+        if (profileResponse.data && profileResponse.data.data) {
+          const profile = profileResponse.data.data;
+          setDoctorProfile(profile);
+          
+          // Set specialty based on doctor's actual specialization
+          if (profile.specialization) {
+            setSelectedSpecialty(profile.specialization);
+          }
+        }
+
+        // Fetch doctor's patients through bookings (when endpoint exists)
+        try {
+          const bookingsResponse = await api.get(`/booking/doctor/${user.id}`);
+          if (bookingsResponse.data && bookingsResponse.data.data) {
+            // Extract unique patients from bookings
+            const patientsMap = new Map();
+            bookingsResponse.data.data.forEach(booking => {
+              if (!patientsMap.has(booking.patientId)) {
+                patientsMap.set(booking.patientId, {
+                  id: booking.patientId,
+                  name: booking.fullName,
+                  email: booking.email,
+                  phone: booking.phoneNumber,
+                  lastReport: booking.createdAt,
+                  riskLevel: 'Medium', // Mock for now
+                  predictions: [], // Will be populated when analytics endpoint exists
+                  reports: []
+                });
+              }
+            });
+            setDoctorPatients(Array.from(patientsMap.values()));
+          }
+        } catch (patientsError) {
+          console.log('Patients data not available through bookings, using mock data');
+          // Keep existing mock data structure
+        }
+
+      } catch (error) {
+        console.error('Error fetching doctor data:', error);
+        setError('Failed to load doctor data');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchDoctorData();
+  }, [isAuthenticated, user, authLoading]);
+
   const specialties = ['Cardiology', 'Neurology', 'Ophthalmology', 'Pulmonology'];
   
   const getSpecialtyIcon = (specialty) => {
@@ -132,7 +203,8 @@ const DoctorDashboard = () => {
     }
   };
 
-  const currentPatients = patientsBySpecialty[selectedSpecialty] || [];
+  // Use real patient data if available, otherwise fallback to mock data
+  const currentPatients = doctorPatients.length > 0 ? doctorPatients : (patientsBySpecialty[selectedSpecialty] || []);
   const filteredPatients = currentPatients.filter(patient =>
     patient.name.toLowerCase().includes(searchTerm.toLowerCase())
   );
@@ -146,6 +218,37 @@ const DoctorDashboard = () => {
     setIsModalOpen(false);
     setSelectedPatient(null);
   };
+
+  // Show loading state
+  if (authLoading || loading) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <FaSpinner className="animate-spin text-4xl text-pink-600 mx-auto mb-4" />
+          <p className="text-gray-600">Loading your dashboard...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Show error state
+  if (error) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <FaExclamationTriangle className="text-4xl text-red-500 mx-auto mb-4" />
+          <h2 className="text-xl font-semibold text-gray-800 mb-2">Error Loading Dashboard</h2>
+          <p className="text-gray-600 mb-4">{error}</p>
+          <button 
+            onClick={() => window.location.reload()} 
+            className="px-4 py-2 bg-pink-600 text-white rounded-lg hover:bg-pink-700 transition-colors duration-300"
+          >
+            Try Again
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-linear-to-br from-blue-50 via-white to-green-50 py-8 px-4">
@@ -163,13 +266,52 @@ const DoctorDashboard = () => {
             </div>
             <div>
               <h1 className="text-4xl font-bold text-gray-800">Doctor Dashboard</h1>
-              <p className="text-gray-600">Welcome, Dr. Sarah Mitchell - {selectedSpecialty} Specialist</p>
+              <p className="text-gray-600">
+                Welcome, {doctorProfile?.fullName || user?.fullName || 'Doctor'} - {selectedSpecialty} Specialist
+              </p>
+              {doctorProfile && (
+                <div className="mt-2 space-y-1">
+                  <p className="text-sm text-gray-500">
+                    {doctorProfile.qualification} • {doctorProfile.experience}+ years experience
+                  </p>
+                  <p className="text-sm text-gray-500">
+                    {doctorProfile.email} • License: {doctorProfile.licenseNumber}
+                  </p>
+                </div>
+              )}
             </div>
+          </div>
+
+          {/* Tab Navigation */}
+          <div className="flex space-x-1 bg-white rounded-lg p-1 shadow-sm">
+            <button
+              onClick={() => setActiveTab('dashboard')}
+              className={`px-6 py-2 rounded-md text-sm font-medium transition-all duration-300 ${
+                activeTab === 'dashboard' 
+                  ? 'bg-pink-600 text-white' 
+                  : 'text-gray-600 hover:text-gray-800 hover:bg-gray-100'
+              }`}
+            >
+              Dashboard
+            </button>
+            <button
+              onClick={() => setActiveTab('appointments')}
+              className={`px-6 py-2 rounded-md text-sm font-medium transition-all duration-300 ${
+                activeTab === 'appointments' 
+                  ? 'bg-pink-600 text-white' 
+                  : 'text-gray-600 hover:text-gray-800 hover:bg-gray-100'
+              }`}
+            >
+              Appointments
+            </button>
           </div>
         </motion.div>
 
-        {/* Specialty Selection */}
-        <motion.div 
+        {/* Tab Content */}
+        {activeTab === 'dashboard' && (
+          <>
+            {/* Specialty Selection */}
+            <motion.div 
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.2, duration: 0.6 }}
@@ -349,6 +491,13 @@ const DoctorDashboard = () => {
             </div>
           </motion.div>
         </div>
+        </>
+        )}
+
+        {/* Appointments Tab */}
+        {activeTab === 'appointments' && (
+          <DoctorBookings />
+        )}
       </div>
 
       {/* Patient Detail Modal */}

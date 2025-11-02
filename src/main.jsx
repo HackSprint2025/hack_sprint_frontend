@@ -3,6 +3,8 @@ import { createRoot } from 'react-dom/client'
 import './index.css'
 import App from './App.jsx'
 import { createBrowserRouter, RouterProvider } from 'react-router-dom'
+import { AuthProvider } from './context/AuthContext.jsx'
+import ProtectedRoute from './components/ProtectedRoute.jsx'
 import HomePage from './pages/HomePage.jsx'
 import AboutPage from './pages/AboutPage.jsx'
 import LoginPage from './pages/auth/LoginPage.jsx'
@@ -36,15 +38,27 @@ const router = createBrowserRouter([
       },
       {
         path: '/patient-dashboard',
-        element: <PatientDashboard />,
+        element: (
+          <ProtectedRoute requiredRole="patient">
+            <PatientDashboard />
+          </ProtectedRoute>
+        ),
       },
       {
         path: '/doctor-dashboard',
-        element: <DoctorDashboard />,
+        element: (
+          <ProtectedRoute requiredRole="doctor">
+            <DoctorDashboard />
+          </ProtectedRoute>
+        ),
       },
       {
         path: '/profile',
-        element: <ProfileHolder />,
+        element: (
+          <ProtectedRoute>
+            <ProfileHolder />
+          </ProtectedRoute>
+        ),
       },
       {
         path: '/contact',
@@ -52,7 +66,11 @@ const router = createBrowserRouter([
       },
       {
         path: '/schedule-consultation',
-        element: <ScheduleConsultationPage />,
+        element: (
+          <ProtectedRoute>
+            <ScheduleConsultationPage />
+          </ProtectedRoute>
+        ),
       }
     ]
   },
@@ -60,6 +78,8 @@ const router = createBrowserRouter([
 
 createRoot(document.getElementById('root')).render(
   <StrictMode>
-    <RouterProvider router={router} />
+    <AuthProvider>
+      <RouterProvider router={router} />
+    </AuthProvider>
   </StrictMode>,
 )

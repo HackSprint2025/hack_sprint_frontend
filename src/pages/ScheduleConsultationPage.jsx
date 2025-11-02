@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { 
   FaCalendarAlt, 
@@ -17,20 +17,37 @@ import {
   FaEye,
   FaLungs,
   FaStethoscope,
-  FaBone,
   FaBaby,
   FaFemale,
-  FaSearch
+  FaSearch,
+  FaSpinner,
+  FaExclamationTriangle,
+  FaBone
 } from 'react-icons/fa';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
+import bookingService from '../utils/bookingService';
+import doctorService from '../utils/doctorService';
 
 const ScheduleConsultationPage = () => {
+  const { isAuthenticated, user, userType } = useAuth();
+  const navigate = useNavigate();
+  
   const [step, setStep] = useState(1);
   const [selectedDoctor, setSelectedDoctor] = useState(null);
   const [selectedDate, setSelectedDate] = useState(null);
   const [selectedTime, setSelectedTime] = useState(null);
-  const [consultationType, setConsultationType] = useState('video');
+  const [consultationType, setConsultationType] = useState('videocall');
   const [isBooked, setIsBooked] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
+  const [doctors, setDoctors] = useState([]);
+  const [doctorsLoading, setDoctorsLoading] = useState(true);
+  
+  const [searchTerm, setSearchTerm] = useState('');
+  const [selectedSpecialty, setSelectedSpecialty] = useState('');
+  const [allDoctors, setAllDoctors] = useState([]);
+  const [specializations, setSpecializations] = useState([]);
   
   const [patientInfo, setPatientInfo] = useState({
     name: '',
@@ -43,60 +60,86 @@ const ScheduleConsultationPage = () => {
     allergies: ''
   });
 
-  const doctors = [
-    {
-      id: 1,
-      name: "Dr. Sarah Johnson",
-      specialty: "Cardiology",
-      experience: "15+ years",
-      rating: 4.9,
-      image: "https://images.unsplash.com/photo-1559839734-2b71ea197ec2?w=300&h=300&fit=crop&crop=face",
-      icon: FaHeart,
-      color: "bg-pink-500",
-      about: "Specialized in heart disease prediction and prevention with advanced AI diagnostics.",
-      availability: ["Monday", "Wednesday", "Friday"],
-      consultationFee: "$150"
-    },
-    {
-      id: 2,
-      name: "Dr. Michael Chen",
-      specialty: "Neurology", 
-      experience: "12+ years",
-      rating: 4.8,
-      image: "https://images.unsplash.com/photo-1612349317150-e413f6a5b16d?w=300&h=300&fit=crop&crop=face",
-      icon: FaBrain,
-      color: "bg-green-500",
-      about: "Expert in neurological disorders and brain health monitoring using machine learning.",
-      availability: ["Tuesday", "Thursday", "Saturday"],
-      consultationFee: "$175"
-    },
-    {
-      id: 3,
-      name: "Dr. Emily Rodriguez",
-      specialty: "Ophthalmology",
-      experience: "10+ years", 
-      rating: 4.9,
-      image: "https://images.unsplash.com/photo-1594824483764-e446e04023c8?w=300&h=300&fit=crop&crop=face",
-      icon: FaEye,
-      color: "bg-blue-500",
-      about: "Pioneer in early eye disease detection through AI-powered retinal analysis.",
-      availability: ["Monday", "Tuesday", "Friday"],
-      consultationFee: "$140"
-    },
-    {
-      id: 4,
-      name: "Dr. James Wilson",
-      specialty: "General Medicine",
-      experience: "18+ years",
-      rating: 4.7,
-      image: "https://images.unsplash.com/photo-1582750433449-648ed127bb54?w=300&h=300&fit=crop&crop=face",
-      icon: FaStethoscope,
-      color: "bg-green-600",
-      about: "Comprehensive healthcare with focus on preventive medicine and early diagnosis.",
-      availability: ["Monday", "Wednesday", "Thursday", "Friday"],
-      consultationFee: "$120"
+  // Check if user is authenticated and is a patient
+  useEffect(() => {
+    if (!isAuthenticated) {
+      navigate('/login');
+      return;
     }
-  ];
+    
+    if (userType !== 'patient') {
+      navigate('/doctor-dashboard');
+      return;
+    }
+
+      // Pre-fill patient info from user data
+    if (user) {
+      setPatientInfo(prev => ({
+        ...prev,
+        name: user.fullName || '',
+        email: user.email || '',
+        phone: user.phoneNumber || '',
+        dateOfBirth: user.dateOfBirth || ''
+      }));
+    }
+  }, [isAuthenticated, userType, user, navigate]);
+
+  // Load doctors from backend
+  useEffect(() => {
+    const loadDoctors = async () => {
+      try {
+        setDoctorsLoading(true);
+        setError('');
+        
+        const response = await doctorService.getAllDoctors();
+        if (response.success) {
+          // Map backend data to frontend format with additional UI properties
+          const mappedDoctors = response.data.map((doctor) => 
+            doctorService.formatDoctorData(doctor)
+          ).filter(doctor => doctor.isApproved && doctor.isActive);
+          
+          setAllDoctors(mappedDoctors);
+          setDoctors(mappedDoctors);
+          
+          // Extract unique specializations
+          const uniqueSpecializations = [...new Set(mappedDoctors.map(doctor => doctor.specialty))].sort();
+          setSpecializations(uniqueSpecializations);
+          
+        } else {
+          setError(response.message || 'Failed to load doctors');
+        }
+      } catch (error) {
+        console.error('Error loading doctors:', error);
+        setError('Failed to load doctors. Please try again.');
+      } finally {
+        setDoctorsLoading(false);
+      }
+    };
+
+    if (isAuthenticated && userType === 'patient') {
+      loadDoctors();
+    }
+  }, [isAuthenticated, userType]);
+
+  // Filter doctors based on search and specialty
+  useEffect(() => {
+    let filteredDoctors = allDoctors;
+
+    if (searchTerm) {
+      filteredDoctors = filteredDoctors.filter(doctor =>
+        doctor.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        doctor.specialty.toLowerCase().includes(searchTerm.toLowerCase())
+      );
+    }
+
+    if (selectedSpecialty) {
+      filteredDoctors = filteredDoctors.filter(doctor =>
+        doctor.specialty === selectedSpecialty
+      );
+    }
+
+    setDoctors(filteredDoctors);
+  }, [searchTerm, selectedSpecialty, allDoctors]);
 
   // Generate next 14 days for date selection
   const generateDates = () => {
@@ -126,16 +169,47 @@ const ScheduleConsultationPage = () => {
     });
   };
 
-  const handleBookAppointment = () => {
-    // Handle appointment booking
-    console.log('Booking appointment:', {
-      doctor: selectedDoctor,
-      date: selectedDate,
-      time: selectedTime,
-      type: consultationType,
-      patient: patientInfo
-    });
-    setIsBooked(true);
+  const handleBookAppointment = async () => {
+    setLoading(true);
+    setError('');
+
+    try {
+      // Prepare booking data
+      const bookingData = {
+        doctorId: selectedDoctor.id,
+        appointmentType: consultationType,
+        appointmentDate: bookingService.formatAppointmentDate(selectedDate),
+        appointmentTime: bookingService.formatAppointmentTime(selectedTime),
+        fullName: patientInfo.name,
+        email: patientInfo.email,
+        phoneNumber: patientInfo.phone,
+        dateOfBirth: patientInfo.dateOfBirth,
+        reasonForConsultation: patientInfo.reason,
+        currentMedications: patientInfo.medications || null,
+        knownAllergies: patientInfo.allergies || null
+      };
+
+      // Validate booking data
+      const validation = bookingService.validateBookingData(bookingData);
+      if (!validation.isValid) {
+        setError(validation.errors[0]);
+        return;
+      }
+
+      // Create booking
+      const response = await bookingService.createBooking(bookingData);
+      console.log('Booking response:', response);
+      
+      if (response.success) {
+        setIsBooked(true);
+      } else {
+        setError(response.message || 'Failed to create booking');
+      }
+    } catch (error) {
+      setError(error.message);
+    } finally {
+      setLoading(false);
+    }
   };
 
   const nextStep = () => setStep(step + 1);
@@ -157,7 +231,7 @@ const ScheduleConsultationPage = () => {
             <p className="text-gray-600"><strong>Doctor:</strong> {selectedDoctor?.name}</p>
             <p className="text-gray-600"><strong>Date:</strong> {selectedDate?.toLocaleDateString()}</p>
             <p className="text-gray-600"><strong>Time:</strong> {selectedTime}</p>
-            <p className="text-gray-600"><strong>Type:</strong> {consultationType === 'video' ? 'Video Call' : 'In-Person'}</p>
+            <p className="text-gray-600"><strong>Type:</strong> {consultationType === 'videocall' ? 'Video Call' : 'In-Person'}</p>
           </div>
           <p className="text-gray-600 mb-8">
             You will receive a confirmation email with meeting details shortly.
@@ -233,13 +307,105 @@ const ScheduleConsultationPage = () => {
           transition={{ duration: 0.4 }}
           className="bg-white rounded-2xl p-8 shadow-lg"
         >
+          {/* Error Message */}
+          {error && (
+            <motion.div
+              initial={{ opacity: 0, y: -10 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="mb-6 p-4 bg-red-50 border border-red-200 text-red-700 rounded-lg flex items-center"
+            >
+              <FaExclamationTriangle className="mr-2" />
+              {error}
+            </motion.div>
+          )}
+
           {/* Step 1: Select Doctor */}
           {step === 1 && (
             <div>
               <h2 className="text-3xl font-bold text-gray-800 mb-8 text-center">Choose Your Doctor</h2>
-              <div className="grid md:grid-cols-2 gap-6">
+              
+              {/* Search and Filter Section */}
+              {!doctorsLoading && allDoctors.length > 0 && (
+                <div className="mb-8 space-y-4">
+                  {/* Search Bar */}
+                  <div className="relative max-w-md mx-auto">
+                    <FaSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
+                    <input
+                      type="text"
+                      placeholder="Search doctors by name or specialty..."
+                      value={searchTerm}
+                      onChange={(e) => setSearchTerm(e.target.value)}
+                      className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-pink-500 focus:border-transparent"
+                    />
+                  </div>
+                  
+                  {/* Specialty Filter */}
+                  <div className="flex flex-wrap justify-center gap-2">
+                    <button
+                      onClick={() => setSelectedSpecialty('')}
+                      className={`px-4 py-2 rounded-full text-sm font-medium transition-all duration-300 ${
+                        selectedSpecialty === ''
+                          ? 'bg-pink-600 text-white'
+                          : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                      }`}
+                    >
+                      All Specialties
+                    </button>
+                    {specializations.map(specialty => (
+                      <button
+                        key={specialty}
+                        onClick={() => setSelectedSpecialty(specialty)}
+                        className={`px-4 py-2 rounded-full text-sm font-medium transition-all duration-300 ${
+                          selectedSpecialty === specialty
+                            ? 'bg-pink-600 text-white'
+                            : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                        }`}
+                      >
+                        {specialty}
+                      </button>
+                    ))}
+                  </div>
+                  
+                  {/* Results Count */}
+                  <div className="text-center text-sm text-gray-600">
+                    {doctors.length === allDoctors.length 
+                      ? `Showing all ${doctors.length} doctors`
+                      : `Showing ${doctors.length} of ${allDoctors.length} doctors`
+                    }
+                  </div>
+                </div>
+              )}
+              
+              {doctorsLoading ? (
+                <div className="flex justify-center items-center py-12">
+                  <FaSpinner className="animate-spin text-4xl text-pink-600 mr-4" />
+                  <span className="text-gray-600">Loading doctors...</span>
+                </div>
+              ) : doctors.length === 0 ? (
+                <div className="text-center py-12">
+                  <FaUserMd className="text-6xl text-gray-300 mx-auto mb-4" />
+                  <h3 className="text-xl font-semibold text-gray-600 mb-2">No Doctors Available</h3>
+                  <p className="text-gray-500">Please try again later or contact support.</p>
+                </div>
+              ) : (
+                <div className="grid md:grid-cols-2 gap-6">
                 {doctors.map((doctor) => {
-                  const DoctorIcon = doctor.icon;
+                  // Map icon string to actual icon component
+                  const getIconComponent = (iconName) => {
+                    const iconMap = {
+                      'FaHeart': FaHeart,
+                      'FaBrain': FaBrain,
+                      'FaEye': FaEye,
+                      'FaLungs': FaLungs,
+                      'FaBone': FaBone,
+                      'FaBaby': FaBaby,
+                      'FaFemale': FaFemale,
+                      'FaStethoscope': FaStethoscope,
+                      'FaUser': FaUser
+                    };
+                    return iconMap[iconName] || FaStethoscope;
+                  };
+                  const DoctorIcon = getIconComponent(doctor.icon);
                   return (
                     <motion.div
                       key={doctor.id}
@@ -261,23 +427,36 @@ const ScheduleConsultationPage = () => {
                           <h3 className="font-bold text-lg text-gray-800">{doctor.name}</h3>
                           <p className="text-pink-600 font-medium">{doctor.specialty}</p>
                           <p className="text-sm text-gray-600">{doctor.experience}</p>
+                          {doctor.qualification && (
+                            <p className="text-xs text-gray-500">{doctor.qualification}</p>
+                          )}
                         </div>
                         <div className={`w-12 h-12 ${doctor.color} rounded-full flex items-center justify-center`}>
                           <DoctorIcon className="text-white text-xl" />
                         </div>
                       </div>
-                      <p className="text-gray-700 text-sm mb-4">{doctor.about}</p>
-                      <div className="flex justify-between items-center">
+                      <p className="text-gray-700 text-sm mb-4 line-clamp-2">{doctor.about}</p>
+                      <div className="flex justify-between items-center mb-2">
                         <div className="flex items-center">
                           <span className="text-yellow-400">★</span>
                           <span className="font-semibold ml-1">{doctor.rating}</span>
+                          <span className="text-xs text-gray-500 ml-2">(120+ reviews)</span>
                         </div>
                         <span className="font-bold text-green-600">{doctor.consultationFee}</span>
                       </div>
+                      {selectedDoctor?.id === doctor.id && (
+                        <div className="mt-3 p-3 bg-pink-50 rounded-lg border border-pink-200">
+                          <p className="text-sm text-pink-700 font-medium flex items-center">
+                            <FaCheckCircle className="mr-2" />
+                            Doctor selected - Continue to book your appointment
+                          </p>
+                        </div>
+                      )}
                     </motion.div>
                   );
                 })}
-              </div>
+                </div>
+              )}
             </div>
           )}
 
@@ -292,9 +471,9 @@ const ScheduleConsultationPage = () => {
                 <h3 className="text-lg font-semibold text-gray-800 mb-4">Consultation Type</h3>
                 <div className="flex space-x-4">
                   <button
-                    onClick={() => setConsultationType('video')}
+                    onClick={() => setConsultationType('videocall')}
                     className={`flex-1 p-4 rounded-lg border-2 transition-all duration-300 ${
-                      consultationType === 'video'
+                      consultationType === 'videocall'
                         ? 'border-pink-500 bg-pink-50'
                         : 'border-gray-300 hover:border-pink-300'
                     }`}
@@ -304,9 +483,9 @@ const ScheduleConsultationPage = () => {
                     <p className="text-sm text-gray-600">Online consultation</p>
                   </button>
                   <button
-                    onClick={() => setConsultationType('in-person')}
+                    onClick={() => setConsultationType('inperson')}
                     className={`flex-1 p-4 rounded-lg border-2 transition-all duration-300 ${
-                      consultationType === 'in-person'
+                      consultationType === 'inperson'
                         ? 'border-pink-500 bg-pink-50'
                         : 'border-gray-300 hover:border-pink-300'
                     }`}
@@ -494,7 +673,7 @@ const ScheduleConsultationPage = () => {
                     </div>
                     <div>
                       <p className="text-sm text-gray-600 mb-1">Consultation Type</p>
-                      <p className="font-medium">{consultationType === 'video' ? 'Video Call' : 'In-Person Visit'}</p>
+                      <p className="font-medium">{consultationType === 'videocall' ? 'Video Call' : 'In-Person Visit'}</p>
                     </div>
                     <div>
                       <p className="text-sm text-gray-600 mb-1">Consultation Fee</p>
@@ -575,13 +754,27 @@ const ScheduleConsultationPage = () => {
               </motion.button>
             ) : (
               <motion.button
-                whileHover={{ scale: 1.02 }}
-                whileTap={{ scale: 0.98 }}
+                whileHover={{ scale: loading ? 1 : 1.02 }}
+                whileTap={{ scale: loading ? 1 : 0.98 }}
                 onClick={handleBookAppointment}
-                className="flex items-center px-8 py-3 bg-green-600 text-white rounded-lg font-semibold hover:bg-green-700 hover:shadow-lg transition-all duration-300"
+                disabled={loading}
+                className={`flex items-center px-8 py-3 rounded-lg font-semibold transition-all duration-300 ${
+                  loading
+                    ? 'bg-gray-400 cursor-not-allowed'
+                    : 'bg-green-600 hover:bg-green-700 hover:shadow-lg'
+                } text-white`}
               >
-                <FaCheckCircle className="mr-2" />
-                Confirm Booking
+                {loading ? (
+                  <>
+                    <FaSpinner className="animate-spin mr-2" />
+                    Booking...
+                  </>
+                ) : (
+                  <>
+                    <FaCheckCircle className="mr-2" />
+                    Confirm Booking
+                  </>
+                )}
               </motion.button>
             )}
           </div>
