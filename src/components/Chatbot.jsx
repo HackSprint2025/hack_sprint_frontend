@@ -195,11 +195,11 @@ const Chatbot = ({ isOpen, onClose, className = '' }) => {
       {/* Header */}
       <div className="bg-linear-to-r from-pink-600 to-pink-700 text-white p-4 rounded-t-3xl flex items-center justify-between">
         <div className="flex items-center space-x-3">
-          <div className="w-10 h-10 bg-white text-gray-600 bg-opacity-20 rounded-full flex items-center justify-center">
-            <FaRobot className="text-xl" />
+          <div className="w-10 h-10 bg-white bg-opacity-20 rounded-full flex items-center justify-center">
+            <FaRobot className="text-xl text-white" />
           </div>
           <div>
-            <h3 className="font-semibold"><p className='text-white'>Healthcare Assistant</p></h3>
+            <h3 className="font-semibold text-white">Healthcare Assistant</h3>
             <p className="text-xs opacity-80">
               {sessionInfo.isActive ? 'Online' : 'Connecting...'}
             </p>
@@ -210,7 +210,7 @@ const Chatbot = ({ isOpen, onClose, className = '' }) => {
           {/* Action buttons */}
           <button
             onClick={onClose}
-            className="p-2 hover:scale-110 hover:bg-opacity-20 rounded-full transition-colors cursor-pointer"
+            className="p-2 hover:bg-white hover:bg-opacity-20 rounded-full transition-all duration-200"
             title="Close chat"
           >
             <FaTimes className="text-lg" />
@@ -310,7 +310,7 @@ const Chatbot = ({ isOpen, onClose, className = '' }) => {
                 <button
                   key={index}
                   onClick={() => handleSuggestionClick(suggestion)}
-                  className="text-left p-3 bg-white border border-gray-200 rounded-lg hover:border-blue-300 hover:bg-pink-50 transition-all duration-200 text-sm"
+                  className="text-left p-3 bg-white border border-gray-200 rounded-lg hover:border-pink-300 hover:bg-pink-50 hover:shadow-md transition-all duration-200 text-sm"
                 >
                   {suggestion}
                 </button>
@@ -348,7 +348,7 @@ const Chatbot = ({ isOpen, onClose, className = '' }) => {
               placeholder="Type your health question here..."
               disabled={isLoading || !sessionInfo.isActive}
               rows={1}
-              className="w-full px-4 py-3 border border-gray-300 rounded-2xl resize-none focus:border-transparent disabled:bg-gray-100 disabled:cursor-not-allowed text-sm"
+              className="w-full px-4 py-3 border border-gray-300 rounded-2xl resize-none focus:outline-none focus:ring-2 focus:ring-pink-500 focus:border-pink-500 disabled:bg-gray-100 disabled:cursor-not-allowed text-sm transition-all"
               style={{
                 minHeight: '48px',
                 maxHeight: '120px'
@@ -363,7 +363,7 @@ const Chatbot = ({ isOpen, onClose, className = '' }) => {
           <button
             onClick={sendMessage}
             disabled={!inputMessage.trim() || isLoading || !sessionInfo.isActive}
-            className="bg-pink-600 hover:bg-pink-700 disabled:bg-gray-400 text-white p-3 rounded-2xl transition-colors disabled:cursor-not-allowed shrink-0"
+            className="bg-pink-600 hover:bg-pink-700 disabled:bg-gray-400 text-white p-3 rounded-2xl transition-all duration-200 disabled:cursor-not-allowed shrink-0 hover:shadow-lg disabled:hover:shadow-none"
             title="Send message"
           >
             {isLoading ? (
